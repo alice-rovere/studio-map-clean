@@ -16,6 +16,7 @@ import TechNode from "./components/TechNode.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
 import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
+import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
 import { supabase } from "./lib/supabase.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
@@ -76,6 +77,7 @@ function MapActions({
 
 function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [isNodeKnowledgeOpen, setIsNodeKnowledgeOpen] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [glossary, setGlossary] = useState([]);
@@ -104,7 +106,7 @@ function App() {
           supabase
             .from("node_details")
             .select(
-              "node_id,description,best_practices,naming_conventions,associated_software,study_urls",
+              "node_id,description,best_practices,naming_conventions,associated_software,study_urls,extended_content",
             ),
         ]);
 
@@ -275,6 +277,37 @@ function App() {
     return null;
   }
 
+  async function handleSaveNodeContent(content) {
+    if (!selectedNode || !supabase) return "Configurazione Supabase mancante.";
+
+    try {
+      const { error } = await supabase
+        .from("node_details")
+        .upsert(
+          { node_id: selectedNode.id, extended_content: content },
+          { onConflict: "node_id" },
+        );
+      if (error) {
+        console.error("Impossibile salvare i contenuti estesi del nodo.", error);
+        return `Impossibile salvare i contenuti: ${error.message}`;
+      }
+    } catch (error) {
+      console.error("Impossibile salvare i contenuti estesi del nodo.", error);
+      return `Impossibile salvare i contenuti: ${getErrorMessage(error)}`;
+    }
+
+    setNodeDetails((currentDetails) => ({
+      ...currentDetails,
+      [selectedNode.id]: {
+        ...currentDetails[selectedNode.id],
+        node_id: selectedNode.id,
+        extended_content: content,
+      },
+    }));
+    setMutationError("");
+    return null;
+  }
+
   async function handleNodeDragStop(_, node) {
     if (!supabase) return;
 
@@ -291,19 +324,28 @@ function App() {
   }
 
   useEffect(() => {
-    if (!selectedNodeId && !isGlossaryFormOpen && !isNodeFormOpen) return undefined;
+    if (
+      !selectedNodeId &&
+      !isNodeKnowledgeOpen &&
+      !isGlossaryFormOpen &&
+      !isNodeFormOpen
+    ) return undefined;
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        setSelectedNodeId(null);
-        setIsGlossaryFormOpen(false);
-        setIsNodeFormOpen(false);
+        if (isNodeKnowledgeOpen) {
+          setIsNodeKnowledgeOpen(false);
+        } else {
+          setSelectedNodeId(null);
+          setIsGlossaryFormOpen(false);
+          setIsNodeFormOpen(false);
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, isGlossaryFormOpen, isNodeFormOpen]);
+  }, [selectedNodeId, isNodeKnowledgeOpen, isGlossaryFormOpen, isNodeFormOpen]);
 
   if (isLoading || loadError) {
     return (
@@ -344,7 +386,10 @@ function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={handleNodeDragStop}
-        onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+        onNodeClick={(_, node) => {
+          setSelectedNodeId(node.id);
+          setIsNodeKnowledgeOpen(false);
+        }}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.1}
@@ -374,13 +419,26 @@ function App() {
           onClose={() => setIsGlossaryFormOpen(false)}
         />
       )}
-      {selectedNode && (
+      {selectedNode && !isNodeKnowledgeOpen && (
         <NodeDetailsPanel
           key={selectedNode.id}
           node={selectedNode}
           details={nodeDetails[selectedNode.id]}
           glossary={glossary}
           onClose={() => setSelectedNodeId(null)}
+          onOpenKnowledge={() => setIsNodeKnowledgeOpen(true)}
+        />
+      )}
+      {selectedNode && isNodeKnowledgeOpen && (
+        <NodeKnowledgePage
+          node={selectedNode}
+          content={nodeDetails[selectedNode.id]?.extended_content}
+          onSaveContent={handleSaveNodeContent}
+          onBack={() => setIsNodeKnowledgeOpen(false)}
+          onClose={() => {
+            setIsNodeKnowledgeOpen(false);
+            setSelectedNodeId(null);
+          }}
         />
       )}
     </main>

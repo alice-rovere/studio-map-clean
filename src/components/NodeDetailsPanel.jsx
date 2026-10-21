@@ -1,4 +1,4 @@
-import { BookOpen, Code2, ExternalLink, X } from "lucide-react";
+import { ArrowRight, BookOpen, Code2, ExternalLink, X } from "lucide-react";
 import GlossaryText from "./GlossaryText.jsx";
 
 const emptyDetails = {
@@ -9,7 +9,13 @@ const emptyDetails = {
   study_urls: [],
 };
 
-export default function NodeDetailsPanel({ node, details, glossary, onClose }) {
+export default function NodeDetailsPanel({
+  node,
+  details,
+  glossary,
+  onClose,
+  onOpenKnowledge,
+}) {
   const nodeInfo = details || emptyDetails;
   const category = node.data.category?.toLowerCase() || "tools";
   const studyUrls = Array.isArray(nodeInfo.study_urls) ? nodeInfo.study_urls : [];
@@ -56,6 +62,16 @@ export default function NodeDetailsPanel({ node, details, glossary, onClose }) {
           <p className="node-details__description">
             <GlossaryText glossary={glossary}>{nodeInfo.description || emptyDetails.description}</GlossaryText>
           </p>
+
+          <button
+            className="node-details__expand"
+            onClick={onOpenKnowledge}
+            type="button"
+          >
+            <BookOpen aria-hidden="true" size={15} />
+            <span>Apri approfondimento</span>
+            <ArrowRight aria-hidden="true" size={15} />
+          </button>
 
           <section className="node-details__section" aria-labelledby="best-practices-title">
             <h3 id="best-practices-title">
