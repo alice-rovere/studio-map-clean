@@ -1,5 +1,5 @@
-import { BookOpen, ExternalLink, X } from "lucide-react";
-import { nodeDetails } from "../data/nodeDetails.js";
+import { BookOpen, Code2, ExternalLink, X } from "lucide-react";
+import { nodeDetails, nodeNamingConventions } from "../data/nodeDetails.js";
 
 const categoryPractices = {
   frontend: [
@@ -83,6 +83,18 @@ export default function NodeDetailsPanel({ node, onClose }) {
             </h3>
             <ul>
               {practices.map((practice) => <li key={practice}>{practice}</li>)}
+            </ul>
+          </section>
+
+          <section className="node-details__section" aria-labelledby="naming-conventions-title">
+            <h3 id="naming-conventions-title">
+              <Code2 aria-hidden="true" size={15} />
+              Naming convention
+            </h3>
+            <ul>
+              {nodeNamingConventions[node.id].map((convention) => (
+                <li key={convention}>{convention}</li>
+              ))}
             </ul>
           </section>
 
