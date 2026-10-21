@@ -5,8 +5,9 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
   const [term, setTerm] = useState("");
   const [definition, setDefinition] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const normalizedTerm = term.trim();
     const normalizedDefinition = definition.trim();
@@ -16,16 +17,20 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
       return;
     }
 
-    const addError = onAddTerm({
-      term: normalizedTerm,
-      definition: normalizedDefinition,
-    });
-    if (addError) {
-      setValidationError(addError);
-      return;
+    setIsSubmitting(true);
+    try {
+      const addError = await onAddTerm({
+        term: normalizedTerm,
+        definition: normalizedDefinition,
+      });
+      if (addError) {
+        setValidationError(addError);
+        return;
+      }
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    onClose();
   }
 
   return (
@@ -40,6 +45,7 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
         <button
           aria-label="Chiudi form"
           className="glossary-form__close"
+          disabled={isSubmitting}
           onClick={onClose}
           type="button"
         >
@@ -51,6 +57,7 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
         <input
           autoFocus
           id="glossary-term"
+          disabled={isSubmitting}
           onChange={(event) => setTerm(event.target.value)}
           placeholder="Es. deployment"
           value={term}
@@ -58,6 +65,7 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
         <label htmlFor="glossary-definition">Definizione</label>
         <textarea
           id="glossary-definition"
+          disabled={isSubmitting}
           onChange={(event) => setDefinition(event.target.value)}
           placeholder="Descrivi brevemente il termine"
           rows={3}
@@ -71,13 +79,14 @@ export default function GlossaryForm({ error, onAddTerm, onClose }) {
         <div className="glossary-form__actions">
           <button
             className="glossary-form__cancel"
+            disabled={isSubmitting}
             onClick={onClose}
             type="button"
           >
             Annulla
           </button>
-          <button className="glossary-form__submit" type="submit">
-            Aggiungi termine
+          <button className="glossary-form__submit" disabled={isSubmitting} type="submit">
+            {isSubmitting ? "Salvataggio…" : "Aggiungi termine"}
           </button>
         </div>
       </form>

@@ -1,6 +1,5 @@
-import { glossario as defaultGlossary } from "../data/glossario.js";
-
-export default function GlossaryText({ children, glossary = defaultGlossary }) {
+export default function GlossaryText({ children, glossary = [] }) {
+  if (glossary.length === 0) return String(children);
   const glossaryByTerm = new Map(
     glossary.map((entry) => [entry.term.toLowerCase(), entry]),
   );

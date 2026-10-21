@@ -1,16 +1,24 @@
-# React + Vite
+# Studio Map
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Mappa React Flow con dati persistenti su Supabase: nodi, collegamenti, dettagli
+tecnici e glossario.
 
-Currently, two official plugins are available:
+## Configurazione
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Crea un progetto Supabase.
+2. In **SQL Editor**, esegui il file
+   [`supabase/migrations/20261021000000_initial_schema.sql`](./supabase/migrations/20261021000000_initial_schema.sql).
+   Crea le tabelle e inserisce i dati iniziali attualmente presenti nella mappa.
+3. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
+   chiave `anon`/publishable trovati in **Project Settings → API**.
+4. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
-## React Compiler
+Non inserire mai una `service_role` key nel frontend. La migrazione abilita
+lettura pubblica e consente agli utenti anonimi di modificare posizioni/nodi,
+collegamenti e aggiungere termini al glossario, in linea con l'app senza login.
+Se la mappa non deve essere modificabile pubblicamente, configura autenticazione
+e restringi le policy RLS prima della pubblicazione.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Le posizioni spostate, i collegamenti creati/eliminati e i nuovi termini del
+glossario sono salvati immediatamente su Supabase. I contenuti dei nodi e i
+relativi dettagli vengono letti dalle rispettive tabelle.

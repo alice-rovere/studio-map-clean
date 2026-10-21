@@ -1,44 +1,22 @@
 import { BookOpen, Code2, ExternalLink, X } from "lucide-react";
-import { nodeDetails, nodeNamingConventions } from "../data/nodeDetails.js";
 import GlossaryText from "./GlossaryText.jsx";
 
-const categoryPractices = {
-  frontend: [
-    "Preferisci componenti piccoli e riutilizzabili, con responsabilita chiare.",
-    "Verifica accessibilita, stati di caricamento ed errori oltre al caso ideale.",
-    "Mantieni dipendenze e bundle essenziali; testa l'interfaccia sui breakpoint supportati.",
-  ],
-  backend: [
-    "Valida gli input al confine dell'API e restituisci errori coerenti.",
-    "Tieni segreti e configurazione fuori dal codice e applica il principio del minimo privilegio.",
-    "Aggiungi test per i casi limite e log strutturati senza dati sensibili.",
-  ],
-  database: [
-    "Definisci schema, vincoli e indici in base alle query reali.",
-    "Usa migrazioni versionate e verifica le modifiche prima di applicarle in produzione.",
-    "Applica permessi minimi e prevedi backup e procedure di ripristino.",
-  ],
-  devops: [
-    "Automatizza i passaggi ripetibili con workflow versionati.",
-    "Non esporre segreti nei log o nei repository; limita i permessi dei token.",
-    "Monitora esecuzioni e distribuzioni e documenta il percorso di rollback.",
-  ],
-  tools: [
-    "Condividi configurazioni e convenzioni utili nel repository del team.",
-    "Mantieni strumenti e plugin aggiornati e installa solo cio che serve.",
-    "Proteggi credenziali e dati di progetto anche negli strumenti locali.",
-  ],
-};
-
-const fallbackDetails = {
+const emptyDetails = {
   description: "Esplora questa tecnologia e il suo ruolo nell'ecosistema dello studio.",
-  links: [],
+  best_practices: [],
+  naming_conventions: [],
+  associated_software: [],
+  study_urls: [],
 };
 
-export default function NodeDetailsPanel({ node, glossary, onClose }) {
-  const details = nodeDetails[node.id] || fallbackDetails;
+export default function NodeDetailsPanel({ node, details, glossary, onClose }) {
+  const nodeInfo = details || emptyDetails;
   const category = node.data.category?.toLowerCase() || "tools";
-  const practices = categoryPractices[category] || categoryPractices.tools;
+  const studyUrls = Array.isArray(nodeInfo.study_urls) ? nodeInfo.study_urls : [];
+  const bestPractices =
+    typeof nodeInfo.best_practices === "string"
+      ? nodeInfo.best_practices.split(/\r?\n/).filter(Boolean)
+      : [];
 
   return (
     <div className="node-details">
@@ -76,7 +54,7 @@ export default function NodeDetailsPanel({ node, glossary, onClose }) {
             <h2 id="node-details-title">{node.data.label}</h2>
           </div>
           <p className="node-details__description">
-            <GlossaryText glossary={glossary}>{details.description}</GlossaryText>
+            <GlossaryText glossary={glossary}>{nodeInfo.description || emptyDetails.description}</GlossaryText>
           </p>
 
           <section className="node-details__section" aria-labelledby="best-practices-title">
@@ -85,7 +63,7 @@ export default function NodeDetailsPanel({ node, glossary, onClose }) {
               Best practice
             </h3>
             <ul>
-              {practices.map((practice) => (
+              {bestPractices.map((practice) => (
                 <li key={practice}><GlossaryText glossary={glossary}>{practice}</GlossaryText></li>
               ))}
             </ul>
@@ -97,7 +75,7 @@ export default function NodeDetailsPanel({ node, glossary, onClose }) {
               Naming convention
             </h3>
             <ul>
-              {nodeNamingConventions[node.id].map((convention) => (
+              {(nodeInfo.naming_conventions || []).map((convention) => (
                 <li key={convention}><GlossaryText glossary={glossary}>{convention}</GlossaryText></li>
               ))}
             </ul>
@@ -108,9 +86,9 @@ export default function NodeDetailsPanel({ node, glossary, onClose }) {
               <ExternalLink aria-hidden="true" size={15} />
               Link utili
             </h3>
-            {details.links.length > 0 ? (
+            {studyUrls.length > 0 ? (
               <ul className="node-details__links">
-                {details.links.map((link) => (
+                {studyUrls.map((link) => (
                   <li key={link.url}>
                     <a href={link.url} rel="noreferrer" target="_blank">
                       <span>{link.label}</span>
@@ -123,6 +101,16 @@ export default function NodeDetailsPanel({ node, glossary, onClose }) {
               <p className="node-details__empty">Nessun link disponibile per questo nodo.</p>
             )}
           </section>
+          {nodeInfo.associated_software?.length > 0 && (
+            <section className="node-details__section" aria-labelledby="associated-software-title">
+              <h3 id="associated-software-title">Software associati</h3>
+              <ul>
+                {nodeInfo.associated_software.map((software) => (
+                  <li key={software}>{software}</li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
         <footer className="node-details__footer">
           <span className="node-details__status" aria-hidden="true" />

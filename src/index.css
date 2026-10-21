@@ -33,6 +33,38 @@ body,
     #0b1120;
 }
 
+.studio-map__message {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #c7d0df;
+  text-align: center;
+}
+
+.studio-map__message button {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px solid #40506a;
+  border-radius: 8px;
+  background: #182337;
+  color: #e8edf5;
+  cursor: pointer;
+}
+
+.studio-map__error {
+  position: absolute;
+  z-index: 10;
+  top: 108px;
+  left: 32px;
+  max-width: min(520px, calc(100% - 64px));
+  padding: 10px 14px;
+  border: 1px solid #8c4c55;
+  border-radius: 8px;
+  background: #321e28;
+  color: #ffd6dc;
+  font-size: 12px;
+}
+
 .studio-map .react-flow {
   width: 100%;
   height: 100%;
