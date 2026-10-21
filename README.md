@@ -18,9 +18,12 @@ tecnici e glossario.
 5. Esegui
    [`supabase/migrations/20261021030000_allow_node_extended_content_updates.sql`](./supabase/migrations/20261021030000_allow_node_extended_content_updates.sql)
    per consentire il salvataggio dei contenuti estesi.
-6. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
+6. Esegui
+   [`supabase/migrations/20261021040000_add_vite.sql`](./supabase/migrations/20261021040000_add_vite.sql)
+   per aggiungere Vite alla mappa e i relativi dettagli.
+7. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
    chiave `anon`/publishable trovati in **Project Settings → API**.
-7. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
+8. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
 Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
 lettura pubblica e consentono agli utenti anonimi di creare e modificare nodi,
