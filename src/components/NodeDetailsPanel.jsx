@@ -1,5 +1,6 @@
 import { BookOpen, Code2, ExternalLink, X } from "lucide-react";
 import { nodeDetails, nodeNamingConventions } from "../data/nodeDetails.js";
+import GlossaryText from "./GlossaryText.jsx";
 
 const categoryPractices = {
   frontend: [
@@ -74,7 +75,9 @@ export default function NodeDetailsPanel({ node, onClose }) {
             <span className="node-details__prompt" aria-hidden="true">&gt;_</span>
             <h2 id="node-details-title">{node.data.label}</h2>
           </div>
-          <p className="node-details__description">{details.description}</p>
+          <p className="node-details__description">
+            <GlossaryText>{details.description}</GlossaryText>
+          </p>
 
           <section className="node-details__section" aria-labelledby="best-practices-title">
             <h3 id="best-practices-title">
@@ -82,7 +85,9 @@ export default function NodeDetailsPanel({ node, onClose }) {
               Best practice
             </h3>
             <ul>
-              {practices.map((practice) => <li key={practice}>{practice}</li>)}
+              {practices.map((practice) => (
+                <li key={practice}><GlossaryText>{practice}</GlossaryText></li>
+              ))}
             </ul>
           </section>
 
@@ -93,7 +98,7 @@ export default function NodeDetailsPanel({ node, onClose }) {
             </h3>
             <ul>
               {nodeNamingConventions[node.id].map((convention) => (
-                <li key={convention}>{convention}</li>
+                <li key={convention}><GlossaryText>{convention}</GlossaryText></li>
               ))}
             </ul>
           </section>
