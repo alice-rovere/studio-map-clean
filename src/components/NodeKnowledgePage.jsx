@@ -126,6 +126,7 @@ function validateContent(content) {
 export default function NodeKnowledgePage({
   node,
   content,
+  canEdit,
   onBack,
   onClose,
   onSaveContent,
@@ -208,7 +209,7 @@ export default function NodeKnowledgePage({
       <div className="node-knowledge__body">
         <span className="node-details__category">{node.data.category}</span>
         <h2 id="node-knowledge-title">{node.data.label}</h2>
-        {isEditing ? (
+        {isEditing && canEdit ? (
           <form className="node-knowledge__editor" onSubmit={handleSave}>
             <label htmlFor="node-knowledge-json">Contenuto esteso (JSON)</label>
             <p>
@@ -259,7 +260,7 @@ export default function NodeKnowledgePage({
               </button>
             </div>
           </form>
-        ) : (
+        ) : canEdit ? (
           <button
             className="node-knowledge__edit"
             onClick={startEditing}
@@ -268,6 +269,10 @@ export default function NodeKnowledgePage({
             <Pencil aria-hidden="true" size={15} />
             Inserisci o modifica contenuti
           </button>
+        ) : (
+          <p className="node-knowledge__empty">
+            Accedi con un account autorizzato per modificare questi contenuti.
+          </p>
         )}
         {sections.length > 0 ? (
           <div className="node-knowledge__sections">

@@ -11,9 +11,10 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Network, Plus } from "lucide-react";
+import { LogIn, LogOut, Network, Plus } from "lucide-react";
 import TechNode from "./components/TechNode.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
+import AuthPanel from "./components/AuthPanel.jsx";
 import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
 import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
@@ -30,6 +31,14 @@ function getErrorMessage(error) {
 function MapActions({
   isGlossaryFormOpen,
   isNodeFormOpen,
+  isAuthenticated,
+  isAuthLoading,
+  isAuthPanelOpen,
+  userEmail,
+  onToggleAuthPanel,
+  onRequestMagicLink,
+  onCloseAuthPanel,
+  onSignOut,
   onToggleGlossary,
   onToggleNode,
   onAddNode,
@@ -47,26 +56,56 @@ function MapActions({
 
   return (
     <Panel className="studio-map__actions" position="top-right">
-      <button
-        aria-label="Aggiungi un termine al glossario"
-        aria-pressed={isGlossaryFormOpen}
-        className="studio-map__action-button studio-map__glossary-button"
-        onClick={() => onToggleGlossary()}
-        title="Aggiungi un termine al glossario"
-        type="button"
-      >
-        <Plus aria-hidden="true" size={16} />
-      </button>
-      <button
-        aria-pressed={isNodeFormOpen}
-        className="studio-map__action-button studio-map__node-button"
-        onClick={() => onToggleNode()}
-        type="button"
-      >
-        <Network aria-hidden="true" size={15} />
-        Aggiungi nodo
-      </button>
-      {isNodeFormOpen && (
+      {isAuthenticated ? (
+        <>
+          <button
+            aria-label="Aggiungi un termine al glossario"
+            aria-pressed={isGlossaryFormOpen}
+            className="studio-map__action-button studio-map__glossary-button"
+            onClick={() => onToggleGlossary()}
+            title="Aggiungi un termine al glossario"
+            type="button"
+          >
+            <Plus aria-hidden="true" size={16} />
+          </button>
+          <button
+            aria-pressed={isNodeFormOpen}
+            className="studio-map__action-button studio-map__node-button"
+            onClick={() => onToggleNode()}
+            type="button"
+          >
+            <Network aria-hidden="true" size={15} />
+            Aggiungi nodo
+          </button>
+          <button
+            aria-label={`Esci${userEmail ? ` da ${userEmail}` : ""}`}
+            className="studio-map__action-button studio-map__auth-button"
+            onClick={onSignOut}
+            title={userEmail || "Esci"}
+            type="button"
+          >
+            <LogOut aria-hidden="true" size={15} />
+            Esci
+          </button>
+        </>
+      ) : (
+        <button
+          className="studio-map__action-button studio-map__auth-button"
+          disabled={isAuthLoading}
+          onClick={onToggleAuthPanel}
+          type="button"
+        >
+          <LogIn aria-hidden="true" size={15} />
+          {isAuthLoading ? "Verifica accesso…" : "Accedi"}
+        </button>
+      )}
+      {isAuthPanelOpen && !isAuthenticated && (
+        <AuthPanel
+          onRequestMagicLink={onRequestMagicLink}
+          onClose={onCloseAuthPanel}
+        />
+      )}
+      {isNodeFormOpen && isAuthenticated && (
         <NodeForm
           categories={nodeCategories}
           onAddNode={handleAddNode}
@@ -84,11 +123,15 @@ function App() {
   const [isSecurityLearningOpen, setIsSecurityLearningOpen] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
+  const [isAuthPanelOpen, setIsAuthPanelOpen] = useState(false);
   const [glossary, setGlossary] = useState([]);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [nodeDetails, setNodeDetails] = useState({});
   const [isLoading, setIsLoading] = useState(Boolean(supabase));
+  const [session, setSession] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(Boolean(supabase));
+  const [authError, setAuthError] = useState("");
   const [loadError, setLoadError] = useState(
     supabase
       ? ""
@@ -97,6 +140,7 @@ function App() {
   const [mutationError, setMutationError] = useState("");
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+  const isAuthenticated = Boolean(session?.user);
 
   const loadStudioMap = useCallback(async () => {
     if (!supabase) return;
@@ -150,6 +194,53 @@ function App() {
     if (supabase) void Promise.resolve().then(loadStudioMap);
   }, [loadStudioMap]);
 
+  useEffect(() => {
+    if (!supabase) return undefined;
+
+    let isActive = true;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!isActive) return;
+      setSession(nextSession);
+      setIsAuthLoading(false);
+      setAuthError("");
+      if (!nextSession) {
+        setIsAuthPanelOpen(false);
+        setIsGlossaryFormOpen(false);
+        setIsNodeFormOpen(false);
+        setSelectedNodeId(null);
+        setIsNodeKnowledgeOpen(false);
+      }
+    });
+
+    async function restoreSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (isActive) {
+          setSession(data.session);
+          setAuthError("");
+        }
+      } catch (error) {
+        console.error("Impossibile verificare la sessione Supabase.", error);
+        if (isActive) {
+          setAuthError(
+            `Impossibile verificare la sessione: ${getErrorMessage(error)}`,
+          );
+        }
+      } finally {
+        if (isActive) setIsAuthLoading(false);
+      }
+    }
+
+    void restoreSession();
+    return () => {
+      isActive = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   function retryLoadStudioMap() {
     setIsLoading(true);
     setMutationError("");
@@ -158,7 +249,14 @@ function App() {
 
   const onNodesChange = useCallback(
     (changes) => {
-      setNodes((currentNodes) => applyNodeChanges(changes, currentNodes));
+      const acceptedChanges = isAuthenticated
+        ? changes
+        : changes.filter(
+            (change) => change.type !== "remove" && change.type !== "position",
+          );
+      setNodes((currentNodes) => applyNodeChanges(acceptedChanges, currentNodes));
+      if (!isAuthenticated) return;
+
       const removedIds = changes
         .filter((change) => change.type === "remove")
         .map((change) => change.id);
@@ -175,12 +273,17 @@ function App() {
           });
       }
     },
-    [],
+    [isAuthenticated],
   );
 
   const onEdgesChange = useCallback(
     (changes) => {
-      setEdges((currentEdges) => applyEdgeChanges(changes, currentEdges));
+      const acceptedChanges = isAuthenticated
+        ? changes
+        : changes.filter((change) => change.type !== "remove");
+      setEdges((currentEdges) => applyEdgeChanges(acceptedChanges, currentEdges));
+      if (!isAuthenticated) return;
+
       const removedIds = changes
         .filter((change) => change.type === "remove")
         .map((change) => change.id);
@@ -197,12 +300,12 @@ function App() {
           });
       }
     },
-    [],
+    [isAuthenticated],
   );
 
   const onConnect = useCallback(
     async (connection) => {
-      if (!supabase) return;
+      if (!supabase || !isAuthenticated) return;
       const edge = {
         id: crypto.randomUUID(),
         source: connection.source,
@@ -220,7 +323,7 @@ function App() {
       setEdges((currentEdges) => addEdge(edge, currentEdges));
       setMutationError("");
     },
-    [],
+    [isAuthenticated],
   );
 
   async function handleAddGlossaryTerm({ term, definition }) {
@@ -235,6 +338,7 @@ function App() {
     }
 
     if (!supabase) return "Configurazione Supabase mancante.";
+    if (!isAuthenticated) return "Accedi per modificare il glossario.";
 
     const { data, error } = await supabase
       .from("glossary")
@@ -253,6 +357,7 @@ function App() {
 
   async function handleAddNode({ label, category, position }) {
     if (!supabase) return "Configurazione Supabase mancante.";
+    if (!isAuthenticated) return "Accedi per aggiungere nodi.";
 
     const node = {
       id: crypto.randomUUID(),
@@ -283,6 +388,7 @@ function App() {
 
   async function handleSaveNodeContent(content) {
     if (!selectedNode || !supabase) return "Configurazione Supabase mancante.";
+    if (!isAuthenticated) return "Accedi per modificare i contenuti.";
 
     try {
       const { error } = await supabase
@@ -313,7 +419,7 @@ function App() {
   }
 
   async function handleNodeDragStop(_, node) {
-    if (!supabase) return;
+    if (!supabase || !isAuthenticated) return;
 
     const { error } = await supabase
       .from("nodes")
@@ -325,6 +431,35 @@ function App() {
       return;
     }
     setMutationError("");
+  }
+
+  async function handleRequestMagicLink(email) {
+    if (!supabase) return "Configurazione Supabase mancante.";
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      console.error("Impossibile inviare il link di accesso.", error);
+      return `Impossibile inviare il link di accesso: ${error.message}`;
+    }
+    return null;
+  }
+
+  async function handleSignOut() {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setMutationError("");
+    } catch (error) {
+      console.error("Impossibile terminare la sessione Supabase.", error);
+      setMutationError(`Impossibile uscire: ${getErrorMessage(error)}`);
+    }
   }
 
   useEffect(() => {
@@ -414,9 +549,9 @@ function App() {
           Sicurezza informatica
         </button>
       </div>
-      {mutationError && (
+      {(mutationError || authError) && (
         <p className="studio-map__error" role="alert">
-          {mutationError}
+          {mutationError || authError}
         </p>
       )}
       <ReactFlow
@@ -427,6 +562,9 @@ function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={handleNodeDragStop}
+        nodesDraggable={isAuthenticated}
+        nodesConnectable={isAuthenticated}
+        deleteKeyCode={isAuthenticated ? ["Backspace", "Delete"] : null}
         onNodeClick={(_, node) => {
           setSelectedNodeId(node.id);
           setIsNodeKnowledgeOpen(false);
@@ -441,6 +579,14 @@ function App() {
         <MapActions
           isGlossaryFormOpen={isGlossaryFormOpen}
           isNodeFormOpen={isNodeFormOpen}
+          isAuthenticated={isAuthenticated}
+          isAuthLoading={isAuthLoading}
+          isAuthPanelOpen={isAuthPanelOpen}
+          userEmail={session?.user?.email}
+          onToggleAuthPanel={() => setIsAuthPanelOpen((isOpen) => !isOpen)}
+          onRequestMagicLink={handleRequestMagicLink}
+          onCloseAuthPanel={() => setIsAuthPanelOpen(false)}
+          onSignOut={handleSignOut}
           onToggleGlossary={() => {
             setIsGlossaryFormOpen((isOpen) => !isOpen);
             setIsNodeFormOpen(false);
@@ -454,7 +600,7 @@ function App() {
         />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
       </ReactFlow>
-      {isGlossaryFormOpen && (
+      {isGlossaryFormOpen && isAuthenticated && (
         <GlossaryForm
           onAddTerm={handleAddGlossaryTerm}
           onClose={() => setIsGlossaryFormOpen(false)}
@@ -474,6 +620,7 @@ function App() {
         <NodeKnowledgePage
           node={selectedNode}
           content={nodeDetails[selectedNode.id]?.extended_content}
+          canEdit={isAuthenticated}
           onSaveContent={handleSaveNodeContent}
           onBack={() => setIsNodeKnowledgeOpen(false)}
           onClose={() => {

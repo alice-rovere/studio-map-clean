@@ -21,15 +21,24 @@ tecnici e glossario.
 6. Esegui
    [`supabase/migrations/20261021040000_add_vite.sql`](./supabase/migrations/20261021040000_add_vite.sql)
    per aggiungere Vite alla mappa e i relativi dettagli.
-7. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
-   chiave `anon`/publishable trovati in **Project Settings → API**.
-8. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
+7. Esegui
+   [`supabase/migrations/20261021050000_restrict_anonymous_writes.sql`](./supabase/migrations/20261021050000_restrict_anonymous_writes.sql)
+   per mantenere la lettura pubblica e richiedere un utente autenticato per ogni
+   modifica.
+8. In **Authentication → Sign In / Providers**, abilita Email; nelle
+   impostazioni Auth disattiva le registrazioni pubbliche. In
+   **Authentication → Users**, invita o crea gli account autorizzati.
+9. In **Authentication → URL Configuration**, aggiungi l'URL dell'app locale e
+   quello di produzione tra i redirect consentiti per i magic link.
+10. Crea `.env.local` con l'URL del progetto (`VITE_SUPABASE_URL`) e la chiave
+    `anon`/publishable (`VITE_SUPABASE_ANON_KEY`) da **Project Settings → API**.
+11. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
 Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
-lettura pubblica e consentono agli utenti anonimi di creare e modificare nodi,
-gestire collegamenti e aggiungere termini al glossario, in linea con l'app senza
-login. Se la mappa non deve essere modificabile pubblicamente, configura
-autenticazione e restringi le policy RLS prima della pubblicazione.
+lettura pubblica; solo gli utenti autenticati possono creare, modificare o
+eliminare dati. L'accesso avviene tramite link inviato all'email di un account
+invitato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi, ma
+sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
 
 I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
 termini del glossario sono salvati immediatamente su Supabase. I contenuti dei

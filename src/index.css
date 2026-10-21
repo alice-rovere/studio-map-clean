@@ -249,6 +249,107 @@ body,
   outline-offset: 2px;
 }
 
+.studio-map__auth-button {
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.studio-map__action-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.auth-panel {
+  position: absolute;
+  z-index: 12;
+  top: 48px;
+  right: 0;
+  width: min(340px, calc(100vw - 24px));
+  padding: 16px;
+  border: 1px solid #33445d;
+  border-radius: 12px;
+  background: #141d2d;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.auth-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auth-panel__header h2 {
+  margin: 0;
+  color: #e8edf5;
+  font-size: 15px;
+}
+
+.auth-panel__header p {
+  margin: 5px 0 0;
+  color: #aebbd0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.auth-panel__form {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-panel__form label {
+  color: #c7d0df;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-panel__form input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid #33445d;
+  border-radius: 8px;
+  outline: none;
+  color: #e8edf5;
+  background: #0e1727;
+  font: inherit;
+  font-size: 13px;
+}
+
+.auth-panel__form input:focus {
+  border-color: #7ab8ff;
+}
+
+.auth-panel__submit {
+  min-height: 38px;
+  border: 1px solid #4276a5;
+  border-radius: 8px;
+  color: #e8f3ff;
+  background: #24527b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-panel__submit:hover {
+  background: #2d6698;
+}
+
+.auth-panel__submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.auth-panel__success {
+  margin: 0;
+  color: #8ce0c8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .studio-map .react-flow__minimap {
   overflow: hidden;
   border: 1px solid #273349;
