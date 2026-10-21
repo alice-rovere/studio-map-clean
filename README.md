@@ -37,3 +37,8 @@ momento sono inclusi approfondimenti per Git, HTML e CSS; gli altri nodi
 mostrano un avviso finché non vengono aggiunti contenuti. Dalla vista di
 approfondimento è possibile inserire o modificare le sezioni in formato JSON e
 salvarle su Supabase.
+
+La pagina **Linee guida**, accessibile dalla testata della mappa, raccoglie
+convenzioni generali su naming, organizzazione dei file, qualità del codice,
+accessibilità e sicurezza. I contenuti sono statici nel progetto e non
+richiedono tabelle o migrazioni Supabase.

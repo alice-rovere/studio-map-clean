@@ -17,6 +17,7 @@ import GlossaryForm from "./components/GlossaryForm.jsx";
 import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
 import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
+import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import { supabase } from "./lib/supabase.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
@@ -78,6 +79,7 @@ function MapActions({
 function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [isNodeKnowledgeOpen, setIsNodeKnowledgeOpen] = useState(false);
+  const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [glossary, setGlossary] = useState([]);
@@ -327,6 +329,7 @@ function App() {
     if (
       !selectedNodeId &&
       !isNodeKnowledgeOpen &&
+      !isGuidelinesOpen &&
       !isGlossaryFormOpen &&
       !isNodeFormOpen
     ) return undefined;
@@ -335,6 +338,8 @@ function App() {
       if (event.key === "Escape") {
         if (isNodeKnowledgeOpen) {
           setIsNodeKnowledgeOpen(false);
+        } else if (isGuidelinesOpen) {
+          setIsGuidelinesOpen(false);
         } else {
           setSelectedNodeId(null);
           setIsGlossaryFormOpen(false);
@@ -345,7 +350,13 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, isNodeKnowledgeOpen, isGlossaryFormOpen, isNodeFormOpen]);
+  }, [
+    selectedNodeId,
+    isNodeKnowledgeOpen,
+    isGuidelinesOpen,
+    isGlossaryFormOpen,
+    isNodeFormOpen,
+  ]);
 
   if (isLoading || loadError) {
     return (
@@ -372,6 +383,18 @@ function App() {
         <span className="studio-map__eyebrow">WORKSPACE MANAGEMENT</span>
         <h1>Studio Tech Ecosystem</h1>
         <p>Mappatura dinamica delle competenze e dei software</p>
+        <button
+          className="studio-map__guidelines-button"
+          onClick={() => {
+            setIsGuidelinesOpen(true);
+            setIsGlossaryFormOpen(false);
+            setIsNodeFormOpen(false);
+            setSelectedNodeId(null);
+          }}
+          type="button"
+        >
+          Linee guida
+        </button>
       </div>
       {mutationError && (
         <p className="studio-map__error" role="alert">
@@ -440,6 +463,9 @@ function App() {
             setSelectedNodeId(null);
           }}
         />
+      )}
+      {isGuidelinesOpen && (
+        <GeneralGuidelinesPage onClose={() => setIsGuidelinesOpen(false)} />
       )}
     </main>
   );
