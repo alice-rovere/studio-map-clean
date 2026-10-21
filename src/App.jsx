@@ -11,7 +11,15 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { BookOpen, LogIn, LogOut, Network, Plus, ShieldCheck } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  LogIn,
+  LogOut,
+  Network,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
 import TechNode from "./components/TechNode.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
@@ -23,6 +31,39 @@ import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
+
+const studioCategories = [
+  {
+    id: "frontend",
+    label: "Frontend",
+    description:
+      "Interfacce, esperienze utente e tecnologie che rendono visibili e interattivi i prodotti digitali.",
+  },
+  {
+    id: "backend",
+    label: "Backend",
+    description:
+      "Servizi, API e logica applicativa che elaborano i dati e collegano le parti del prodotto.",
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    description:
+      "Strumenti e applicazioni utili al lavoro quotidiano dello studio e del team.",
+  },
+  {
+    id: "devops",
+    label: "DevOps",
+    description:
+      "Infrastruttura, automazione e processi per distribuire e mantenere i prodotti.",
+  },
+  {
+    id: "database",
+    label: "Database",
+    description:
+      "Sistemi e tecnologie per organizzare, archiviare e interrogare i dati.",
+  },
+];
 
 function getErrorMessage(error) {
   return error instanceof Error ? error.message : "Errore imprevisto.";
@@ -47,8 +88,11 @@ function MapActions({
   onCloseNodeForm,
   onOpenGuidelines,
   onOpenSecurity,
+  nodes,
+  onSelectNode,
 }) {
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const [openCategory, setOpenCategory] = useState(null);
 
   function handleAddNode({ label, category }) {
     const position = screenToFlowPosition({
@@ -56,6 +100,17 @@ function MapActions({
       y: window.innerHeight / 2,
     });
     return onAddNode({ label, category, position });
+  }
+
+  function handleSelectNode(node) {
+    onSelectNode(node.id);
+    setOpenCategory(null);
+    fitView({
+      nodes: [{ id: node.id }],
+      padding: 0.4,
+      duration: 500,
+      maxZoom: 1,
+    });
   }
 
   return (
@@ -87,6 +142,79 @@ function MapActions({
             </button>
           </nav>
         </div>
+        <nav
+          aria-label="Categorie dello studio"
+          className="studio-map__categories"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              event.target
+                .closest(".studio-map__category")
+                ?.querySelector(".studio-map__category-button")
+                ?.focus();
+              setOpenCategory(null);
+            }
+          }}
+        >
+          {studioCategories.map((category) => {
+            const categoryNodes = nodes.filter(
+              (node) => node.data.category?.toLowerCase() === category.id,
+            );
+            const isOpen = openCategory === category.id;
+            const menuId = `studio-map-category-${category.id}`;
+
+            return (
+              <div className="studio-map__category" key={category.id}>
+                <button
+                  aria-describedby={`${menuId}-description`}
+                  aria-expanded={isOpen}
+                  aria-controls={isOpen ? menuId : undefined}
+                  className="studio-map__category-button"
+                  onClick={() =>
+                    setOpenCategory(isOpen ? null : category.id)
+                  }
+                  type="button"
+                >
+                  {category.label}
+                  <ChevronDown aria-hidden="true" size={13} />
+                </button>
+                <span
+                  className="studio-map__category-description"
+                  id={`${menuId}-description`}
+                  role="tooltip"
+                >
+                  {category.description}
+                </span>
+                {isOpen && (
+                  <div
+                    className="studio-map__category-menu"
+                    id={menuId}
+                    role="region"
+                    aria-label={`Nodi ${category.label}`}
+                  >
+                    {categoryNodes.length > 0 ? (
+                      categoryNodes.map((node) => (
+                        <button
+                          className="studio-map__category-item"
+                          key={node.id}
+                          onClick={() => handleSelectNode(node)}
+                          type="button"
+                        >
+                          {node.data.label}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="studio-map__category-empty">
+                        Nessun nodo inserito
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
         <div className="studio-map__actions">
           {isAuthenticated ? (
             <>
@@ -587,6 +715,7 @@ function App() {
         <Background variant="dots" gap={16} size={1} color="#273349" />
         <Controls />
         <MapActions
+          nodes={nodes}
           isGlossaryFormOpen={isGlossaryFormOpen}
           isNodeFormOpen={isNodeFormOpen}
           isAuthenticated={isAuthenticated}
@@ -620,6 +749,10 @@ function App() {
             setIsGlossaryFormOpen(false);
             setIsNodeFormOpen(false);
             setSelectedNodeId(null);
+          }}
+          onSelectNode={(nodeId) => {
+            setSelectedNodeId(nodeId);
+            setIsNodeKnowledgeOpen(false);
           }}
         />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
