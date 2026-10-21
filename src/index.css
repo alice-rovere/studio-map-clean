@@ -54,8 +54,8 @@ body,
 .studio-map__error {
   position: absolute;
   z-index: 10;
-  top: 108px;
-  left: 32px;
+  top: 88px;
+  left: 16px;
   max-width: min(520px, calc(100% - 64px));
   padding: 10px 14px;
   border: 1px solid #8c4c55;
@@ -70,60 +70,92 @@ body,
   height: 100%;
 }
 
-.studio-map__heading {
-  position: absolute;
-  z-index: 5;
-  top: 28px;
-  left: 32px;
-  pointer-events: none;
+.studio-map .react-flow__panel.studio-map__header-panel {
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  width: auto;
+  margin: 0;
 }
 
-.studio-map__eyebrow {
-  color: #75839a;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+.studio-map__header {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 7px 10px;
+  border: 1px solid rgba(51, 68, 93, 0.9);
+  border-radius: 12px;
+  background: rgba(14, 22, 36, 0.92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
 }
 
-.studio-map__heading h1 {
-  margin: 6px 0 2px;
+.studio-map__header-brand,
+.studio-map__brand,
+.studio-map__header-links {
+  display: flex;
+  align-items: center;
+}
+
+.studio-map__header-brand {
+  min-width: 0;
+  gap: 22px;
+}
+
+.studio-map__brand {
+  flex: 0 0 auto;
+  gap: 9px;
+}
+
+.studio-map__brand-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(122, 184, 255, 0.28);
+  border-radius: 10px;
+  color: #9dccff;
+  background: rgba(56, 112, 164, 0.16);
+}
+
+.studio-map__brand-name {
+  margin: 0;
   color: #f5f7fb;
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.04em;
 }
 
-.studio-map__heading p {
-  margin: 0;
-  color: #8491a6;
-  font-size: 12px;
+.studio-map__header-links {
+  gap: 6px;
 }
 
-.studio-map__guidelines-button {
-  min-height: 32px;
-  margin-top: 12px;
-  padding: 0 11px;
-  border: 1px solid #33445d;
+.studio-map__header-link {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid transparent;
   border-radius: 8px;
-  color: #dce4ef;
-  background: rgba(20, 29, 45, 0.92);
+  color: #b9c5d6;
+  background: transparent;
   cursor: pointer;
   font: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  pointer-events: auto;
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
 }
 
-.studio-map__guidelines-button:hover {
-  background: #202c40;
+.studio-map__header-link:hover {
+  border-color: #33445d;
+  color: #e8edf5;
+  background: #192536;
 }
 
-.studio-map__security-button {
-  display: block;
-  margin-top: 6px;
-}
-
-.studio-map__guidelines-button:focus-visible {
+.studio-map__header-link:focus-visible {
   outline: 2px solid #7ab8ff;
   outline-offset: 2px;
 }
@@ -211,7 +243,9 @@ body,
 }
 
 .studio-map__actions {
+  position: relative;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
 }
@@ -228,10 +262,6 @@ body,
   background: #141d2d;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-}
-
-.studio-map__glossary-button {
-  width: 38px;
 }
 
 .studio-map__node-button {
@@ -263,7 +293,7 @@ body,
 .auth-panel {
   position: absolute;
   z-index: 12;
-  top: 48px;
+  top: calc(100% + 10px);
   right: 0;
   width: min(340px, calc(100vw - 24px));
   padding: 16px;
@@ -1095,9 +1125,9 @@ body,
 .glossary-form {
   position: absolute;
   z-index: 10;
-  top: 70px;
-  right: 16px;
-  width: min(320px, calc(100vw - 76px));
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, calc(100vw - 40px));
   padding: 16px;
   border: 1px solid #33445d;
   border-radius: 12px;
@@ -1263,15 +1293,6 @@ body,
 }
 
 @media (max-width: 600px) {
-  .studio-map__heading {
-    top: 18px;
-    left: 18px;
-  }
-
-  .studio-map__heading h1 {
-    font-size: 20px;
-  }
-
   .node-details__panel {
     width: min(100%, 440px);
   }
@@ -1301,13 +1322,45 @@ body,
     padding: 18px 14px;
   }
 
-  .glossary-form {
-    top: 70px;
-    right: 12px;
-    width: min(320px, calc(100vw - 24px));
+}
+
+@media (max-width: 760px) {
+  .studio-map .react-flow__panel.studio-map__header-panel {
+    top: 8px;
+    right: 8px;
+    left: 8px;
   }
 
-  .studio-map__heading {
-    max-width: calc(100% - 180px);
+  .studio-map__header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .studio-map__header-brand {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+
+  .studio-map__header-links {
+    flex-wrap: wrap;
+  }
+
+  .studio-map__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .studio-map__action-button {
+    min-height: 34px;
+  }
+
+  .studio-map__node-button,
+  .studio-map__auth-button {
+    padding: 0 9px;
+    font-size: 11px;
   }
 }

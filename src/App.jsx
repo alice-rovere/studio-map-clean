@@ -11,7 +11,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { LogIn, LogOut, Network, Plus } from "lucide-react";
+import { BookOpen, LogIn, LogOut, Network, Plus, ShieldCheck } from "lucide-react";
 import TechNode from "./components/TechNode.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
@@ -42,7 +42,11 @@ function MapActions({
   onToggleGlossary,
   onToggleNode,
   onAddNode,
+  onAddGlossaryTerm,
+  onCloseGlossaryForm,
   onCloseNodeForm,
+  onOpenGuidelines,
+  onOpenSecurity,
 }) {
   const { screenToFlowPosition } = useReactFlow();
 
@@ -55,63 +59,98 @@ function MapActions({
   }
 
   return (
-    <Panel className="studio-map__actions" position="top-right">
-      {isAuthenticated ? (
-        <>
-          <button
-            aria-label="Aggiungi un termine al glossario"
-            aria-pressed={isGlossaryFormOpen}
-            className="studio-map__action-button studio-map__glossary-button"
-            onClick={() => onToggleGlossary()}
-            title="Aggiungi un termine al glossario"
-            type="button"
-          >
-            <Plus aria-hidden="true" size={16} />
-          </button>
-          <button
-            aria-pressed={isNodeFormOpen}
-            className="studio-map__action-button studio-map__node-button"
-            onClick={() => onToggleNode()}
-            type="button"
-          >
-            <Network aria-hidden="true" size={15} />
-            Aggiungi nodo
-          </button>
-          <button
-            aria-label={`Esci${userEmail ? ` da ${userEmail}` : ""}`}
-            className="studio-map__action-button studio-map__auth-button"
-            onClick={onSignOut}
-            title={userEmail || "Esci"}
-            type="button"
-          >
-            <LogOut aria-hidden="true" size={15} />
-            Esci
-          </button>
-        </>
-      ) : (
-        <button
-          className="studio-map__action-button studio-map__auth-button"
-          disabled={isAuthLoading}
-          onClick={onToggleAuthPanel}
-          type="button"
-        >
-          <LogIn aria-hidden="true" size={15} />
-          {isAuthLoading ? "Verifica accesso…" : "Accedi"}
-        </button>
-      )}
-      {isAuthPanelOpen && !isAuthenticated && (
-        <AuthPanel
-          onRequestMagicLink={onRequestMagicLink}
-          onClose={onCloseAuthPanel}
-        />
-      )}
-      {isNodeFormOpen && isAuthenticated && (
-        <NodeForm
-          categories={nodeCategories}
-          onAddNode={handleAddNode}
-          onClose={onCloseNodeForm}
-        />
-      )}
+    <Panel className="studio-map__header-panel" position="top-left">
+      <header className="studio-map__header">
+        <div className="studio-map__header-brand">
+          <div className="studio-map__brand">
+            <span className="studio-map__brand-icon">
+              <Network aria-hidden="true" size={19} />
+            </span>
+            <h1 className="studio-map__brand-name">studio-map</h1>
+          </div>
+          <nav aria-label="Risorse" className="studio-map__header-links">
+            <button
+              className="studio-map__header-link"
+              onClick={onOpenGuidelines}
+              type="button"
+            >
+              <BookOpen aria-hidden="true" size={15} />
+              Linee guida
+            </button>
+            <button
+              className="studio-map__header-link"
+              onClick={onOpenSecurity}
+              type="button"
+            >
+              <ShieldCheck aria-hidden="true" size={15} />
+              Sicurezza informatica
+            </button>
+          </nav>
+        </div>
+        <div className="studio-map__actions">
+          {isAuthenticated ? (
+            <>
+              <button
+                aria-pressed={isGlossaryFormOpen}
+                className="studio-map__action-button studio-map__node-button"
+                onClick={() => onToggleGlossary()}
+                type="button"
+              >
+                <Plus aria-hidden="true" size={15} />
+                Aggiungi termine
+              </button>
+              <button
+                aria-pressed={isNodeFormOpen}
+                className="studio-map__action-button studio-map__node-button"
+                onClick={() => onToggleNode()}
+                type="button"
+              >
+                <Network aria-hidden="true" size={15} />
+                Aggiungi nodo
+              </button>
+              <button
+                aria-label={`Esci${userEmail ? ` da ${userEmail}` : ""}`}
+                className="studio-map__action-button studio-map__auth-button"
+                onClick={onSignOut}
+                title={userEmail || "Esci"}
+                type="button"
+              >
+                <LogOut aria-hidden="true" size={15} />
+                Esci
+              </button>
+            </>
+          ) : (
+            <button
+              className="studio-map__action-button studio-map__auth-button"
+              disabled={isAuthLoading}
+              onClick={onToggleAuthPanel}
+              type="button"
+            >
+              <LogIn aria-hidden="true" size={15} />
+              {isAuthLoading ? "Verifica accesso…" : "Accedi"}
+            </button>
+          )}
+          {isAuthPanelOpen && !isAuthenticated && (
+            <AuthPanel
+              onRequestMagicLink={onRequestMagicLink}
+              onClose={onCloseAuthPanel}
+            />
+          )}
+          {isNodeFormOpen && isAuthenticated && (
+            <NodeForm
+              categories={nodeCategories}
+              onAddNode={handleAddNode}
+              onClose={onCloseNodeForm}
+            />
+          )}
+          {isGlossaryFormOpen && isAuthenticated && (
+            <GlossaryForm
+              onAddTerm={onAddGlossaryTerm}
+              onClose={onCloseGlossaryForm}
+            />
+          )}
+        </div>
+      </header>
     </Panel>
   );
 }
@@ -520,35 +559,6 @@ function App() {
 
   return (
     <main className="studio-map h-screen w-screen">
-      <div className="studio-map__heading">
-        <span className="studio-map__eyebrow">WORKSPACE MANAGEMENT</span>
-        <h1>Studio Tech Ecosystem</h1>
-        <p>Mappatura dinamica delle competenze e dei software</p>
-        <button
-          className="studio-map__guidelines-button"
-          onClick={() => {
-            setIsGuidelinesOpen(true);
-            setIsGlossaryFormOpen(false);
-            setIsNodeFormOpen(false);
-            setSelectedNodeId(null);
-          }}
-          type="button"
-        >
-          Linee guida
-        </button>
-        <button
-          className="studio-map__guidelines-button studio-map__security-button"
-          onClick={() => {
-            setIsSecurityLearningOpen(true);
-            setIsGlossaryFormOpen(false);
-            setIsNodeFormOpen(false);
-            setSelectedNodeId(null);
-          }}
-          type="button"
-        >
-          Sicurezza informatica
-        </button>
-      </div>
       {(mutationError || authError) && (
         <p className="studio-map__error" role="alert">
           {mutationError || authError}
@@ -596,16 +606,24 @@ function App() {
             setIsGlossaryFormOpen(false);
           }}
           onAddNode={handleAddNode}
+          onAddGlossaryTerm={handleAddGlossaryTerm}
+          onCloseGlossaryForm={() => setIsGlossaryFormOpen(false)}
           onCloseNodeForm={() => setIsNodeFormOpen(false)}
+          onOpenGuidelines={() => {
+            setIsGuidelinesOpen(true);
+            setIsGlossaryFormOpen(false);
+            setIsNodeFormOpen(false);
+            setSelectedNodeId(null);
+          }}
+          onOpenSecurity={() => {
+            setIsSecurityLearningOpen(true);
+            setIsGlossaryFormOpen(false);
+            setIsNodeFormOpen(false);
+            setSelectedNodeId(null);
+          }}
         />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
       </ReactFlow>
-      {isGlossaryFormOpen && isAuthenticated && (
-        <GlossaryForm
-          onAddTerm={handleAddGlossaryTerm}
-          onClose={() => setIsGlossaryFormOpen(false)}
-        />
-      )}
       {selectedNode && !isNodeKnowledgeOpen && (
         <NodeDetailsPanel
           key={selectedNode.id}
