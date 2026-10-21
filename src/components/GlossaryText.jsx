@@ -1,14 +1,13 @@
-import { glossario } from "../data/glossario.js";
+import { glossario as defaultGlossary } from "../data/glossario.js";
 
-const glossaryByTerm = new Map(
-  glossario.map((entry) => [entry.term.toLowerCase(), entry]),
-);
-const glossaryPattern = glossario
-  .map(({ term }) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-  .sort((a, b) => b.length - a.length)
-  .join("|");
-
-export default function GlossaryText({ children }) {
+export default function GlossaryText({ children, glossary = defaultGlossary }) {
+  const glossaryByTerm = new Map(
+    glossary.map((entry) => [entry.term.toLowerCase(), entry]),
+  );
+  const glossaryPattern = glossary
+    .map(({ term }) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .sort((a, b) => b.length - a.length)
+    .join("|");
   const text = String(children);
   const matches = text.matchAll(
     new RegExp(`(?<![\\p{L}\\p{N}_])(${glossaryPattern})(?![\\p{L}\\p{N}_])`, "giu"),

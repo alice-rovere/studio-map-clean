@@ -35,7 +35,7 @@ const fallbackDetails = {
   links: [],
 };
 
-export default function NodeDetailsPanel({ node, onClose }) {
+export default function NodeDetailsPanel({ node, glossary, onClose }) {
   const details = nodeDetails[node.id] || fallbackDetails;
   const category = node.data.category?.toLowerCase() || "tools";
   const practices = categoryPractices[category] || categoryPractices.tools;
@@ -76,7 +76,7 @@ export default function NodeDetailsPanel({ node, onClose }) {
             <h2 id="node-details-title">{node.data.label}</h2>
           </div>
           <p className="node-details__description">
-            <GlossaryText>{details.description}</GlossaryText>
+            <GlossaryText glossary={glossary}>{details.description}</GlossaryText>
           </p>
 
           <section className="node-details__section" aria-labelledby="best-practices-title">
@@ -86,7 +86,7 @@ export default function NodeDetailsPanel({ node, onClose }) {
             </h3>
             <ul>
               {practices.map((practice) => (
-                <li key={practice}><GlossaryText>{practice}</GlossaryText></li>
+                <li key={practice}><GlossaryText glossary={glossary}>{practice}</GlossaryText></li>
               ))}
             </ul>
           </section>
@@ -98,7 +98,7 @@ export default function NodeDetailsPanel({ node, onClose }) {
             </h3>
             <ul>
               {nodeNamingConventions[node.id].map((convention) => (
-                <li key={convention}><GlossaryText>{convention}</GlossaryText></li>
+                <li key={convention}><GlossaryText glossary={glossary}>{convention}</GlossaryText></li>
               ))}
             </ul>
           </section>
