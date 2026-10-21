@@ -181,15 +181,43 @@ body,
   background: #202c40;
 }
 
-.studio-map .studio-map__glossary-button {
-  order: -1;
-  border-bottom-color: #273349;
-  background: #141d2d;
-  fill: #c7d0df;
+.studio-map__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.studio-map .studio-map__glossary-button:hover {
+.studio-map__action-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #33445d;
+  border-radius: 9px;
+  color: #dce4ef;
+  background: #141d2d;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.studio-map__glossary-button {
+  width: 38px;
+}
+
+.studio-map__node-button {
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.studio-map__action-button:hover {
   background: #202c40;
+}
+
+.studio-map__action-button:focus-visible {
+  outline: 2px solid #7ab8ff;
+  outline-offset: 2px;
 }
 
 .studio-map .react-flow__minimap {
@@ -429,9 +457,22 @@ body,
 .glossary-form {
   position: absolute;
   z-index: 10;
-  bottom: 12px;
-  left: 58px;
+  top: 70px;
+  right: 16px;
   width: min(320px, calc(100vw - 76px));
+  padding: 16px;
+  border: 1px solid #33445d;
+  border-radius: 12px;
+  background: #141d2d;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+}
+
+.node-form {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, calc(100vw - 40px));
   padding: 16px;
   border: 1px solid #33445d;
   border-radius: 12px;
@@ -483,7 +524,8 @@ body,
 }
 
 .glossary-form__fields input,
-.glossary-form__fields textarea {
+.glossary-form__fields textarea,
+.glossary-form__fields select {
   width: 100%;
   padding: 9px 10px;
   border: 1px solid #33445d;
@@ -497,7 +539,8 @@ body,
 }
 
 .glossary-form__fields input:focus,
-.glossary-form__fields textarea:focus {
+.glossary-form__fields textarea:focus,
+.glossary-form__fields select:focus {
   border-color: #7ab8ff;
 }
 
@@ -596,8 +639,12 @@ body,
   }
 
   .glossary-form {
-    bottom: 150px;
-    left: 12px;
+    top: 70px;
+    right: 12px;
     width: min(320px, calc(100vw - 24px));
+  }
+
+  .studio-map__heading {
+    max-width: calc(100% - 180px);
   }
 }

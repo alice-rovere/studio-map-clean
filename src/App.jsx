@@ -4,25 +4,80 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   Background,
-  ControlButton,
   Controls,
   MiniMap,
+  Panel,
   ReactFlow,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus } from "lucide-react";
+import { Network, Plus } from "lucide-react";
 import TechNode from "./components/TechNode.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
+import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
 import { supabase } from "./lib/supabase.js";
+
+const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
 function getErrorMessage(error) {
   return error instanceof Error ? error.message : "Errore imprevisto.";
 }
 
+function MapActions({
+  isGlossaryFormOpen,
+  isNodeFormOpen,
+  onToggleGlossary,
+  onToggleNode,
+  onAddNode,
+  onCloseNodeForm,
+}) {
+  const { screenToFlowPosition } = useReactFlow();
+
+  function handleAddNode({ label, category }) {
+    const position = screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+    return onAddNode({ label, category, position });
+  }
+
+  return (
+    <Panel className="studio-map__actions" position="top-right">
+      <button
+        aria-label="Aggiungi un termine al glossario"
+        aria-pressed={isGlossaryFormOpen}
+        className="studio-map__action-button studio-map__glossary-button"
+        onClick={() => onToggleGlossary()}
+        title="Aggiungi un termine al glossario"
+        type="button"
+      >
+        <Plus aria-hidden="true" size={16} />
+      </button>
+      <button
+        aria-pressed={isNodeFormOpen}
+        className="studio-map__action-button studio-map__node-button"
+        onClick={() => onToggleNode()}
+        type="button"
+      >
+        <Network aria-hidden="true" size={15} />
+        Aggiungi nodo
+      </button>
+      {isNodeFormOpen && (
+        <NodeForm
+          categories={nodeCategories}
+          onAddNode={handleAddNode}
+          onClose={onCloseNodeForm}
+        />
+      )}
+    </Panel>
+  );
+}
+
 function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
+  const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [glossary, setGlossary] = useState([]);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
@@ -190,6 +245,36 @@ function App() {
     return null;
   }
 
+  async function handleAddNode({ label, category, position }) {
+    if (!supabase) return "Configurazione Supabase mancante.";
+
+    const node = {
+      id: crypto.randomUUID(),
+      label: label.trim(),
+      category,
+      position_x: position.x,
+      position_y: position.y,
+    };
+    const { error } = await supabase.from("nodes").insert(node);
+    if (error) {
+      console.error("Impossibile salvare il nodo in Supabase.", error);
+      return `Impossibile salvare il nodo: ${error.message}`;
+    }
+
+    setNodes((currentNodes) => [
+      ...currentNodes,
+      {
+        id: node.id,
+        type: "techNode",
+        position,
+        data: { label: node.label, category: node.category },
+      },
+    ]);
+    setIsNodeFormOpen(false);
+    setMutationError("");
+    return null;
+  }
+
   async function handleNodeDragStop(_, node) {
     if (!supabase) return;
 
@@ -206,18 +291,19 @@ function App() {
   }
 
   useEffect(() => {
-    if (!selectedNodeId && !isGlossaryFormOpen) return undefined;
+    if (!selectedNodeId && !isGlossaryFormOpen && !isNodeFormOpen) return undefined;
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
         setSelectedNodeId(null);
         setIsGlossaryFormOpen(false);
+        setIsNodeFormOpen(false);
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, isGlossaryFormOpen]);
+  }, [selectedNodeId, isGlossaryFormOpen, isNodeFormOpen]);
 
   if (isLoading || loadError) {
     return (
@@ -265,16 +351,21 @@ function App() {
         maxZoom={2}
       >
         <Background variant="dots" gap={16} size={1} color="#273349" />
-        <Controls>
-          <ControlButton
-            aria-label="Aggiungi un termine al glossario"
-            className="studio-map__glossary-button"
-            onClick={() => setIsGlossaryFormOpen((isOpen) => !isOpen)}
-            title="Aggiungi un termine al glossario"
-          >
-            <Plus aria-hidden="true" size={16} />
-          </ControlButton>
-        </Controls>
+        <Controls />
+        <MapActions
+          isGlossaryFormOpen={isGlossaryFormOpen}
+          isNodeFormOpen={isNodeFormOpen}
+          onToggleGlossary={() => {
+            setIsGlossaryFormOpen((isOpen) => !isOpen);
+            setIsNodeFormOpen(false);
+          }}
+          onToggleNode={() => {
+            setIsNodeFormOpen((isOpen) => !isOpen);
+            setIsGlossaryFormOpen(false);
+          }}
+          onAddNode={handleAddNode}
+          onCloseNodeForm={() => setIsNodeFormOpen(false)}
+        />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
       </ReactFlow>
       {isGlossaryFormOpen && (

@@ -9,16 +9,19 @@ tecnici e glossario.
 2. In **SQL Editor**, esegui il file
    [`supabase/migrations/20261021000000_initial_schema.sql`](./supabase/migrations/20261021000000_initial_schema.sql).
    Crea le tabelle e inserisce i dati iniziali attualmente presenti nella mappa.
-3. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
+3. Esegui anche
+   [`supabase/migrations/20261021010000_allow_node_creation.sql`](./supabase/migrations/20261021010000_allow_node_creation.sql)
+   per consentire la creazione dei nodi dall'app.
+4. Copia `.env.example` in `.env.local` e inserisci l'URL del progetto e la
    chiave `anon`/publishable trovati in **Project Settings → API**.
-4. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
+5. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
-Non inserire mai una `service_role` key nel frontend. La migrazione abilita
-lettura pubblica e consente agli utenti anonimi di modificare posizioni/nodi,
-collegamenti e aggiungere termini al glossario, in linea con l'app senza login.
-Se la mappa non deve essere modificabile pubblicamente, configura autenticazione
-e restringi le policy RLS prima della pubblicazione.
+Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
+lettura pubblica e consentono agli utenti anonimi di creare e modificare nodi,
+gestire collegamenti e aggiungere termini al glossario, in linea con l'app senza
+login. Se la mappa non deve essere modificabile pubblicamente, configura
+autenticazione e restringi le policy RLS prima della pubblicazione.
 
-Le posizioni spostate, i collegamenti creati/eliminati e i nuovi termini del
-glossario sono salvati immediatamente su Supabase. I contenuti dei nodi e i
-relativi dettagli vengono letti dalle rispettive tabelle.
+I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
+termini del glossario sono salvati immediatamente su Supabase. I contenuti dei
+nodi e i relativi dettagli vengono letti dalle rispettive tabelle.
