@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addEdge,
   Background,
@@ -11,15 +11,29 @@ import {
 import "@xyflow/react/dist/style.css";
 import { initialEdges, initialNodes } from "./data/schemaNodi.js";
 import TechNode from "./components/TechNode.jsx";
+import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
 
 function App() {
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const onConnect = useCallback(
     (params) => setEdges((currentEdges) => addEdge(params, currentEdges)),
     [setEdges],
   );
+
+  useEffect(() => {
+    if (!selectedNodeId) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setSelectedNodeId(null);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNodeId]);
 
   return (
     <main className="studio-map h-screen w-screen">
@@ -36,6 +50,7 @@ function App() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={(_, node) => setSelectedNodeId(node.id)}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.1}
@@ -45,6 +60,13 @@ function App() {
         <Controls />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
       </ReactFlow>
+      {selectedNode && (
+        <NodeDetailsPanel
+          key={selectedNode.id}
+          node={selectedNode}
+          onClose={() => setSelectedNodeId(null)}
+        />
+      )}
     </main>
   );
 }
