@@ -118,6 +118,11 @@ body,
   background: #202c40;
 }
 
+.studio-map__security-button {
+  display: block;
+  margin-top: 6px;
+}
+
 .studio-map__guidelines-button:focus-visible {
   outline: 2px solid #7ab8ff;
   outline-offset: 2px;
@@ -583,6 +588,63 @@ body,
 
 .guidelines-page__list li::marker {
   color: #7ab8ff;
+}
+
+.guidelines-page__close {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 8px 12px;
+  border: 1px solid #4276a5;
+  border-radius: 8px;
+  background: #172a40;
+  color: #c8e2ff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.guidelines-page__close:hover {
+  background: #203b58;
+}
+
+.guidelines-page__resources {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guidelines-page__resources a {
+  display: grid;
+  grid-template-columns: auto 14px;
+  width: fit-content;
+  gap: 4px 8px;
+  color: #9dccff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.guidelines-page__resources a:hover {
+  text-decoration: underline;
+}
+
+.guidelines-page__resources a:focus-visible,
+.guidelines-page__close:focus-visible {
+  outline: 2px solid #7ab8ff;
+  outline-offset: 3px;
+}
+
+.guidelines-page__resource-description {
+  grid-column: 1 / -1;
+  color: #aebbd0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 .node-knowledge__header {

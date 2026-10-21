@@ -43,5 +43,7 @@ salvarle su Supabase.
 
 La pagina **Linee guida**, accessibile dalla testata della mappa, raccoglie
 convenzioni generali su naming, organizzazione dei file, qualità del codice,
-accessibilità e sicurezza. I contenuti sono statici nel progetto e non
-richiedono tabelle o migrazioni Supabase.
+accessibilità e sicurezza. Un pulsante separato nella testata apre la pagina
+introduttiva su sicurezza informatica e hacking etico, con risorse per
+esercitarsi in ambienti autorizzati. I contenuti sono statici nel progetto e
+non richiedono tabelle o migrazioni Supabase.

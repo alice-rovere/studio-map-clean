@@ -18,6 +18,7 @@ import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
 import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
 import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
+import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
@@ -80,6 +81,7 @@ function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [isNodeKnowledgeOpen, setIsNodeKnowledgeOpen] = useState(false);
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
+  const [isSecurityLearningOpen, setIsSecurityLearningOpen] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [glossary, setGlossary] = useState([]);
@@ -330,6 +332,7 @@ function App() {
       !selectedNodeId &&
       !isNodeKnowledgeOpen &&
       !isGuidelinesOpen &&
+      !isSecurityLearningOpen &&
       !isGlossaryFormOpen &&
       !isNodeFormOpen
     ) return undefined;
@@ -340,6 +343,8 @@ function App() {
           setIsNodeKnowledgeOpen(false);
         } else if (isGuidelinesOpen) {
           setIsGuidelinesOpen(false);
+        } else if (isSecurityLearningOpen) {
+          setIsSecurityLearningOpen(false);
         } else {
           setSelectedNodeId(null);
           setIsGlossaryFormOpen(false);
@@ -354,6 +359,7 @@ function App() {
     selectedNodeId,
     isNodeKnowledgeOpen,
     isGuidelinesOpen,
+    isSecurityLearningOpen,
     isGlossaryFormOpen,
     isNodeFormOpen,
   ]);
@@ -394,6 +400,18 @@ function App() {
           type="button"
         >
           Linee guida
+        </button>
+        <button
+          className="studio-map__guidelines-button studio-map__security-button"
+          onClick={() => {
+            setIsSecurityLearningOpen(true);
+            setIsGlossaryFormOpen(false);
+            setIsNodeFormOpen(false);
+            setSelectedNodeId(null);
+          }}
+          type="button"
+        >
+          Sicurezza informatica
         </button>
       </div>
       {mutationError && (
@@ -466,6 +484,12 @@ function App() {
       )}
       {isGuidelinesOpen && (
         <GeneralGuidelinesPage onClose={() => setIsGuidelinesOpen(false)} />
+      )}
+      {isSecurityLearningOpen && (
+        <SecurityLearningPage
+          onBack={() => setIsSecurityLearningOpen(false)}
+          onClose={() => setIsSecurityLearningOpen(false)}
+        />
       )}
     </main>
   );
