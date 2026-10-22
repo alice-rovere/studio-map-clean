@@ -1,5 +1,16 @@
 # Studio Map - Specifica Semplice
 
+## TODO: Autenticazione disattivata (sviluppo)
+
+In `src/App.jsx` la costante `AUTH_DISABLED_FOR_DEV` è attualmente `true`:
+il login è disattivato, la UI di accesso è nascosta e le modifiche restano solo
+in memoria (nessuna scrittura su Supabase). Il caricamento dei dati resta
+pubblico.
+
+**Da fare prima della pubblicazione:** impostare `AUTH_DISABLED_FOR_DEV = false`,
+verificare le policy RLS e testare il magic link. Non abilitare scritture anonime
+nel database.
+
 ## Obiettivo
 
 Un'app React (Vite + Tailwind v4) con un canvas di React Flow a tutto schermo come sfondo navigabile. I nodi e i collegamenti rappresentano l'ecosistema dello studio e sono caricati dinamicamente da Supabase.
