@@ -25,14 +25,19 @@ tecnici e glossario.
    [`supabase/migrations/20261021050000_restrict_anonymous_writes.sql`](./supabase/migrations/20261021050000_restrict_anonymous_writes.sql)
    per mantenere la lettura pubblica e richiedere un utente autenticato per ogni
    modifica.
-8. In **Authentication → Sign In / Providers**, abilita Email; nelle
+8. Esegui
+   [`supabase/migrations/20261022000000_add_edge_kind.sql`](./supabase/migrations/20261022000000_add_edge_kind.sql)
+   per aggiungere il tipo di relazione ai collegamenti e riclassificare gli archi
+   esistenti secondo la grammatica descritta in
+   [`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md).
+9. In **Authentication → Sign In / Providers**, abilita Email; nelle
    impostazioni Auth disattiva le registrazioni pubbliche. In
    **Authentication → Users**, invita o crea gli account autorizzati.
-9. In **Authentication → URL Configuration**, aggiungi l'URL dell'app locale e
-   quello di produzione tra i redirect consentiti per i magic link.
-10. Crea `.env.local` con l'URL del progetto (`VITE_SUPABASE_URL`) e la chiave
+10. In **Authentication → URL Configuration**, aggiungi l'URL dell'app locale e
+    quello di produzione tra i redirect consentiti per i magic link.
+11. Crea `.env.local` con l'URL del progetto (`VITE_SUPABASE_URL`) e la chiave
     `anon`/publishable (`VITE_SUPABASE_ANON_KEY`) da **Project Settings → API**.
-11. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
+12. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
 Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
 lettura pubblica; solo gli utenti autenticati possono creare, modificare o
@@ -41,8 +46,12 @@ invitato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi, ma
 sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
 
 I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
-termini del glossario sono salvati immediatamente su Supabase. I contenuti dei
-nodi e i relativi dettagli vengono letti dalle rispettive tabelle. Dalla modale
+termini del glossario sono salvati immediatamente su Supabase. Ogni collegamento
+ha un tipo di relazione (`richiede`, `usa`, `estende`, `alternativa`,
+`si_integra`, `strumento`, `ospita`): la legenda in basso mostra la resa visiva
+e, passando il mouse su un arco, compare la frase che descrive la relazione.
+I contenuti dei nodi e i relativi dettagli vengono letti dalle rispettive
+tabelle. Dalla modale
 di un nodo si può aprire una vista interna a schermo intero; i contenuti estesi
 sono sezioni strutturate archiviate in `node_details.extended_content`. Al
 momento sono inclusi approfondimenti per Git, HTML e CSS; gli altri nodi

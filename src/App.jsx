@@ -21,6 +21,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import TechNode from "./components/TechNode.jsx";
+import RelationEdge from "./components/RelationEdge.jsx";
+import MapLegend from "./components/MapLegend.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
 import NodeForm from "./components/NodeForm.jsx";
@@ -29,6 +31,7 @@ import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
 import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
+import { DEFAULT_EDGE_KIND, createFlowEdge } from "./lib/edgeKinds.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
@@ -306,6 +309,7 @@ function App() {
   );
   const [mutationError, setMutationError] = useState("");
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
+  const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const isAuthenticated = Boolean(session?.user);
 
@@ -316,7 +320,7 @@ function App() {
       const [nodesResult, edgesResult, glossaryResult, detailsResult] =
         await Promise.all([
           supabase.from("nodes").select("id,label,category,position_x,position_y"),
-          supabase.from("edges").select("id,source,target,type"),
+          supabase.from("edges").select("id,source,target,type,kind"),
           supabase.from("glossary").select("id,term,definition").order("term"),
           supabase
             .from("node_details")
@@ -333,15 +337,18 @@ function App() {
       ].find(Boolean);
       if (queryError) throw queryError;
 
-      setNodes(
-        nodesResult.data.map((node) => ({
-          id: node.id,
-          type: "techNode",
-          position: { x: node.position_x, y: node.position_y },
-          data: { label: node.label, category: node.category },
-        })),
+      const flowNodes = nodesResult.data.map((node) => ({
+        id: node.id,
+        type: "techNode",
+        position: { x: node.position_x, y: node.position_y },
+        data: { label: node.label, category: node.category },
+      }));
+      const nodeLabels = new Map(
+        nodesResult.data.map((node) => [node.id, node.label]),
       );
-      setEdges(edgesResult.data);
+
+      setNodes(flowNodes);
+      setEdges(edgesResult.data.map((edge) => createFlowEdge(edge, nodeLabels)));
       setGlossary(glossaryResult.data);
       setNodeDetails(
         Object.fromEntries(
@@ -478,6 +485,7 @@ function App() {
         source: connection.source,
         target: connection.target,
         type: "smoothstep",
+        kind: DEFAULT_EDGE_KIND,
       };
 
       const { error } = await supabase.from("edges").insert(edge);
@@ -487,10 +495,15 @@ function App() {
         return;
       }
 
-      setEdges((currentEdges) => addEdge(edge, currentEdges));
+      const nodeLabels = new Map(
+        nodes.map((node) => [node.id, node.data.label]),
+      );
+      setEdges((currentEdges) =>
+        addEdge(createFlowEdge(edge, nodeLabels), currentEdges),
+      );
       setMutationError("");
     },
-    [isAuthenticated],
+    [isAuthenticated, nodes],
   );
 
   async function handleAddGlossaryTerm({ term, definition }) {
@@ -696,6 +709,7 @@ function App() {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -756,6 +770,7 @@ function App() {
           }}
         />
         <MiniMap pannable zoomable maskColor="rgba(11, 17, 32, 0.6)" />
+        <MapLegend />
       </ReactFlow>
       {selectedNode && !isNodeKnowledgeOpen && (
         <NodeDetailsPanel
