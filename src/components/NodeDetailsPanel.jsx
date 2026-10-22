@@ -1,4 +1,14 @@
-import { ArrowRight, BookOpen, Code2, ExternalLink, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Code2,
+  ExternalLink,
+  GitFork,
+  Link2,
+  X,
+} from "lucide-react";
 import GlossaryText from "./GlossaryText.jsx";
 
 const emptyDetails = {
@@ -9,10 +19,45 @@ const emptyDetails = {
   study_urls: [],
 };
 
+function RelationGroup({ title, icon, nodes, empty, onSelect }) {
+  if (nodes.length === 0 && !empty) return null;
+
+  return (
+    <div className="node-details__relation-group">
+      <h4 className="node-details__relation-title">
+        {icon}
+        {title}
+      </h4>
+      {nodes.length > 0 ? (
+        <ul className="node-details__relation-list">
+          {nodes.map((relatedNode) => {
+            const category = relatedNode.data.category?.toLowerCase() || "tools";
+            return (
+              <li key={relatedNode.id}>
+                <button
+                  className={`node-details__relation-chip studio-node--${category}`}
+                  onClick={() => onSelect(relatedNode.id)}
+                  type="button"
+                >
+                  {relatedNode.data.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="node-details__empty">{empty}</p>
+      )}
+    </div>
+  );
+}
+
 export default function NodeDetailsPanel({
   node,
   details,
   glossary,
+  relations,
+  onSelectRelated,
   onClose,
   onOpenKnowledge,
 }) {
@@ -72,6 +117,43 @@ export default function NodeDetailsPanel({
             <span>Apri approfondimento</span>
             <ArrowRight aria-hidden="true" size={15} />
           </button>
+
+          {relations && (
+            <section
+              className="node-details__section node-details__relations"
+              aria-labelledby="relations-title"
+            >
+              <h3 id="relations-title">
+                <GitFork aria-hidden="true" size={15} />
+                Relazioni
+              </h3>
+              <RelationGroup
+                empty="Nessun prerequisito diretto nella mappa."
+                icon={<ArrowDown aria-hidden="true" size={13} />}
+                nodes={relations.prerequisites}
+                onSelect={onSelectRelated}
+                title="Prerequisiti"
+              />
+              <RelationGroup
+                icon={<ArrowUp aria-hidden="true" size={13} />}
+                nodes={relations.enables}
+                onSelect={onSelectRelated}
+                title="Abilita"
+              />
+              <RelationGroup
+                icon={<GitFork aria-hidden="true" size={13} />}
+                nodes={relations.alternatives}
+                onSelect={onSelectRelated}
+                title="Alternative"
+              />
+              <RelationGroup
+                icon={<Link2 aria-hidden="true" size={13} />}
+                nodes={relations.related}
+                onSelect={onSelectRelated}
+                title="Correlati"
+              />
+            </section>
+          )}
 
           <section className="node-details__section" aria-labelledby="best-practices-title">
             <h3 id="best-practices-title">

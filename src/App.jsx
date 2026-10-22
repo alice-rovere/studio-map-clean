@@ -35,6 +35,13 @@ import { DEFAULT_EDGE_KIND, createFlowEdge } from "./lib/edgeKinds.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
+const dependencyRelationKinds = new Set(["richiede", "usa", "estende"]);
+const relatedRelationKinds = new Set(["si_integra", "strumento", "ospita"]);
+
+function getRelationKind(edge) {
+  return edge.data?.kind ?? "usa";
+}
+
 const studioCategories = [
   {
     id: "frontend",
@@ -312,6 +319,73 @@ function App() {
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const isAuthenticated = Boolean(session?.user);
+
+  const focus = useMemo(() => {
+    if (!selectedNodeId) return null;
+
+    const nodesById = new Map(nodes.map((node) => [node.id, node]));
+    const prerequisites = [];
+    const enables = [];
+    const alternatives = [];
+    const related = [];
+    const assigned = new Set([selectedNodeId]);
+    const edgeIds = new Set();
+
+    function collect(list, id) {
+      if (assigned.has(id)) return;
+      const node = nodesById.get(id);
+      if (!node) return;
+      assigned.add(id);
+      list.push(node);
+    }
+
+    edges.forEach((edge) => {
+      const isSource = edge.source === selectedNodeId;
+      const isTarget = edge.target === selectedNodeId;
+      if (!isSource && !isTarget) return;
+
+      const kind = getRelationKind(edge);
+      const neighborId = isSource ? edge.target : edge.source;
+
+      if (dependencyRelationKinds.has(kind)) {
+        collect(isSource ? prerequisites : enables, neighborId);
+      } else if (kind === "alternativa") {
+        collect(alternatives, neighborId);
+      } else if (relatedRelationKinds.has(kind)) {
+        collect(related, neighborId);
+      } else {
+        return;
+      }
+      edgeIds.add(edge.id);
+    });
+
+    return {
+      prerequisites,
+      enables,
+      alternatives,
+      related,
+      nodeIds: assigned,
+      edgeIds,
+    };
+  }, [selectedNodeId, nodes, edges]);
+
+  const displayNodes = useMemo(() => {
+    if (!focus) return nodes;
+    return nodes.map((node) =>
+      focus.nodeIds.has(node.id)
+        ? node
+        : { ...node, className: "is-dimmed" },
+    );
+  }, [nodes, focus]);
+
+  const displayEdges = useMemo(() => {
+    if (!focus) return edges;
+    return edges.map((edge) =>
+      focus.edgeIds.has(edge.id)
+        ? edge
+        : { ...edge, className: "is-dimmed" },
+    );
+  }, [edges, focus]);
 
   const loadStudioMap = useCallback(async () => {
     if (!supabase) return;
@@ -706,14 +780,15 @@ function App() {
         </p>
       )}
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={displayNodes}
+        edges={displayEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={handleNodeDragStop}
+        onPaneClick={() => setSelectedNodeId(null)}
         nodesDraggable={isAuthenticated}
         nodesConnectable={isAuthenticated}
         deleteKeyCode={isAuthenticated ? ["Backspace", "Delete"] : null}
@@ -778,6 +853,11 @@ function App() {
           node={selectedNode}
           details={nodeDetails[selectedNode.id]}
           glossary={glossary}
+          relations={focus}
+          onSelectRelated={(nodeId) => {
+            setSelectedNodeId(nodeId);
+            setIsNodeKnowledgeOpen(false);
+          }}
           onClose={() => setSelectedNodeId(null)}
           onOpenKnowledge={() => setIsNodeKnowledgeOpen(true)}
         />

@@ -50,6 +50,10 @@ termini del glossario sono salvati immediatamente su Supabase. Ogni collegamento
 ha un tipo di relazione (`richiede`, `usa`, `estende`, `alternativa`,
 `si_integra`, `strumento`, `ospita`): la legenda in basso mostra la resa visiva
 e, passando il mouse su un arco, compare la frase che descrive la relazione.
+Selezionando un nodo, il resto della mappa si attenua e il pannello laterale
+raggruppa le relazioni in **Prerequisiti**, **Abilita**, **Alternative** e
+**Correlati**, con collegamenti rapidi agli altri nodi. Un clic sullo sfondo
+rimuove la selezione.
 I contenuti dei nodi e i relativi dettagli vengono letti dalle rispettive
 tabelle. Dalla modale
 di un nodo si può aprire una vista interna a schermo intero; i contenuti estesi
