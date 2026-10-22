@@ -14,7 +14,6 @@ import "@xyflow/react/dist/style.css";
 import {
   BookOpen,
   ChevronDown,
-  LayoutGrid,
   LogIn,
   LogOut,
   Network,
@@ -34,7 +33,6 @@ import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
 import { DEFAULT_EDGE_KIND, createFlowEdge } from "./lib/edgeKinds.js";
-import { computeLayeredLayout } from "./lib/layout.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
@@ -112,7 +110,6 @@ function MapActions({
   onCloseNodeForm,
   onOpenGuidelines,
   onOpenSecurity,
-  onAutoLayout,
   nodes,
   onSelectNode,
 }) {
@@ -241,20 +238,6 @@ function MapActions({
           })}
         </nav>
         <div className="studio-map__actions">
-          <button
-            className="studio-map__action-button studio-map__node-button"
-            onClick={() => {
-              onAutoLayout();
-              requestAnimationFrame(() =>
-                fitView({ padding: 0.2, duration: 600 }),
-              );
-            }}
-            title="Disponi i nodi per livelli da sinistra a destra"
-            type="button"
-          >
-            <LayoutGrid aria-hidden="true" size={15} />
-            Riorganizza
-          </button>
           {isAuthenticated ? (
             <>
               <button
@@ -743,39 +726,6 @@ function App() {
     setMutationError("");
   }
 
-  async function handleAutoLayout() {
-    if (nodes.length === 0) return;
-
-    const positions = computeLayeredLayout(nodes, edges);
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => {
-        const position = positions.get(node.id);
-        return position ? { ...node, position } : node;
-      }),
-    );
-
-    if (!supabase || !isAuthenticated) return;
-
-    const payload = nodes.map((node) => {
-      const position = positions.get(node.id);
-      return {
-        id: node.id,
-        label: node.data.label,
-        category: node.data.category,
-        position_x: position.x,
-        position_y: position.y,
-      };
-    });
-
-    const { error } = await supabase.from("nodes").upsert(payload);
-    if (error) {
-      console.error("Impossibile salvare la disposizione dei nodi.", error);
-      setMutationError(`Impossibile salvare la disposizione: ${error.message}`);
-      return;
-    }
-    setMutationError("");
-  }
-
   function handleSearchChange(value) {
     setSearchTerm(value);
     setSelectedNodeId(null);
@@ -936,7 +886,6 @@ function App() {
           onRequestMagicLink={handleRequestMagicLink}
           onCloseAuthPanel={() => setIsAuthPanelOpen(false)}
           onSignOut={handleSignOut}
-          onAutoLayout={handleAutoLayout}
           onToggleGlossary={() => {
             setIsGlossaryFormOpen((isOpen) => !isOpen);
             setIsNodeFormOpen(false);
