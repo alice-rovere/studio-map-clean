@@ -70,8 +70,16 @@ export const EDGE_KINDS = {
 
 export const DEFAULT_EDGE_KIND = "usa";
 
+export const EDGE_KIND_OPTIONS = Object.entries(EDGE_KINDS).map(
+  ([id, config]) => ({ id, ...config }),
+);
+
 export function getEdgeKindConfig(kind) {
   return EDGE_KINDS[kind] ?? EDGE_KINDS[DEFAULT_EDGE_KIND];
+}
+
+export function getEdgeSentence(kind, sourceLabel, targetLabel) {
+  return getEdgeKindConfig(kind).sentence(sourceLabel, targetLabel);
 }
 
 export function createFlowEdge(edge, labels) {

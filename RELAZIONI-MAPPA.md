@@ -78,7 +78,13 @@ modo le migrazioni restano ripetibili e i riferimenti non si rompono.
 
 ## Come aggiungere un collegamento
 
-1. Scegli il soggetto: è il nodo da cui parte la freccia.
-2. Scegli il verbo tra i sette tipi.
-3. Verifica che la frase "soggetto verbo oggetto" abbia senso.
-4. Se nessun verbo calza, il collegamento probabilmente non serve.
+1. Trascina dal nodo soggetto al nodo oggetto per creare il collegamento.
+2. Nella modale **Nuova relazione**, scegli il verbo tra i sette tipi: la
+   frase di anteprima mostra subito come verrà letta la relazione.
+3. Se la frase non ha senso, usa **Inverti direzione** per scambiare soggetto
+   e oggetto senza ricreare il collegamento.
+4. Conferma con **Crea relazione**: solo a questo punto l'arco viene salvato.
+
+Per correggere un collegamento esistente, accedi come editor e clicca sull'arco:
+si riapre la stessa modale con tipo e direzione attuali. Se nessun verbo calza,
+il collegamento probabilmente non serve.

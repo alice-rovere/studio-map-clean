@@ -28,6 +28,7 @@ import GlossaryForm from "./components/GlossaryForm.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
 import NodeForm from "./components/NodeForm.jsx";
 import NodeDetailsPanel from "./components/NodeDetailsPanel.jsx";
+import RelationForm from "./components/RelationForm.jsx";
 import NodeKnowledgePage from "./components/NodeKnowledgePage.jsx";
 import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
@@ -313,6 +314,10 @@ function App() {
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [isAuthPanelOpen, setIsAuthPanelOpen] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState(null);
+  const [editingEdgeId, setEditingEdgeId] = useState(null);
+  const [relationFormError, setRelationFormError] = useState("");
+  const [isSavingRelation, setIsSavingRelation] = useState(false);
   const [glossary, setGlossary] = useState([]);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
@@ -333,6 +338,39 @@ function App() {
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const isAuthenticated = Boolean(session?.user);
+  const nodeLabels = useMemo(
+    () => new Map(nodes.map((node) => [node.id, node.data.label])),
+    [nodes],
+  );
+  const editingEdge = edges.find((edge) => edge.id === editingEdgeId);
+  const relationFormData = useMemo(() => {
+    if (pendingConnection) {
+      return {
+        key: `create-${pendingConnection.source}-${pendingConnection.target}`,
+        mode: "create",
+        source: pendingConnection.source,
+        target: pendingConnection.target,
+        sourceLabel:
+          nodeLabels.get(pendingConnection.source) ?? pendingConnection.source,
+        targetLabel:
+          nodeLabels.get(pendingConnection.target) ?? pendingConnection.target,
+        initialKind: DEFAULT_EDGE_KIND,
+      };
+    }
+    if (editingEdge) {
+      return {
+        key: `edit-${editingEdge.id}`,
+        id: editingEdge.id,
+        mode: "edit",
+        source: editingEdge.source,
+        target: editingEdge.target,
+        sourceLabel: nodeLabels.get(editingEdge.source) ?? editingEdge.source,
+        targetLabel: nodeLabels.get(editingEdge.target) ?? editingEdge.target,
+        initialKind: editingEdge.data?.kind ?? DEFAULT_EDGE_KIND,
+      };
+    }
+    return null;
+  }, [pendingConnection, editingEdge, nodeLabels]);
 
   const visibleNodes = useMemo(() => {
     const query = searchTerm.trim().toLocaleLowerCase();
@@ -496,6 +534,9 @@ function App() {
         setIsAuthPanelOpen(false);
         setIsGlossaryFormOpen(false);
         setIsNodeFormOpen(false);
+        setPendingConnection(null);
+        setEditingEdgeId(null);
+        setRelationFormError("");
         setSelectedNodeId(null);
         setIsNodeKnowledgeOpen(false);
       }
@@ -591,33 +632,101 @@ function App() {
   );
 
   const onConnect = useCallback(
-    async (connection) => {
+    (connection) => {
       if (!supabase || !isAuthenticated) return;
-      const edge = {
-        id: crypto.randomUUID(),
+      setPendingConnection({
         source: connection.source,
         target: connection.target,
-        type: "smoothstep",
-        kind: DEFAULT_EDGE_KIND,
-      };
-
-      const { error } = await supabase.from("edges").insert(edge);
-      if (error) {
-        console.error("Impossibile salvare il collegamento in Supabase.", error);
-        setMutationError(`Impossibile salvare il collegamento: ${error.message}`);
-        return;
-      }
-
-      const nodeLabels = new Map(
-        nodes.map((node) => [node.id, node.data.label]),
-      );
-      setEdges((currentEdges) =>
-        addEdge(createFlowEdge(edge, nodeLabels), currentEdges),
-      );
-      setMutationError("");
+      });
+      setEditingEdgeId(null);
+      setRelationFormError("");
     },
-    [isAuthenticated, nodes],
+    [isAuthenticated],
   );
+
+  const onEdgeClick = useCallback(
+    (_, edge) => {
+      if (!isAuthenticated) return;
+      setPendingConnection(null);
+      setEditingEdgeId(edge.id);
+      setRelationFormError("");
+      setIsNodeKnowledgeOpen(false);
+    },
+    [isAuthenticated],
+  );
+
+  function handleCloseRelationForm() {
+    if (isSavingRelation) return;
+    setPendingConnection(null);
+    setEditingEdgeId(null);
+    setRelationFormError("");
+  }
+
+  async function handleConfirmRelation({ kind, isReversed }) {
+    if (!relationFormData) return;
+    if (!supabase) {
+      setRelationFormError("Configurazione Supabase mancante.");
+      return;
+    }
+    if (!isAuthenticated) {
+      setRelationFormError("Accedi per modificare i collegamenti.");
+      return;
+    }
+
+    const source = isReversed ? relationFormData.target : relationFormData.source;
+    const target = isReversed ? relationFormData.source : relationFormData.target;
+    if (source === target) {
+      setRelationFormError("Una relazione non può collegare un nodo a se stesso.");
+      return;
+    }
+
+    setIsSavingRelation(true);
+    try {
+      if (relationFormData.mode === "edit") {
+        const { error } = await supabase
+          .from("edges")
+          .update({ source, target, kind })
+          .eq("id", relationFormData.id);
+        if (error) throw error;
+
+        setEdges((currentEdges) =>
+          currentEdges.map((edge) =>
+            edge.id === relationFormData.id
+              ? createFlowEdge(
+                  { id: edge.id, source, target, kind },
+                  nodeLabels,
+                )
+              : edge,
+          ),
+        );
+        setEditingEdgeId(null);
+      } else {
+        const edge = {
+          id: crypto.randomUUID(),
+          source,
+          target,
+          type: "smoothstep",
+          kind,
+        };
+        const { error } = await supabase.from("edges").insert(edge);
+        if (error) throw error;
+
+        setEdges((currentEdges) =>
+          addEdge(createFlowEdge(edge, nodeLabels), currentEdges),
+        );
+        setPendingConnection(null);
+      }
+      setRelationFormError("");
+      setMutationError("");
+    } catch (error) {
+      console.error("Impossibile salvare la relazione in Supabase.", error);
+      setRelationFormError(
+        `Impossibile salvare la relazione: ${getErrorMessage(error)}`,
+      );
+    } finally {
+      setIsSavingRelation(false);
+    }
+  }
 
   async function handleAddGlossaryTerm({ term, definition }) {
     const normalizedTerm = term.trim();
@@ -786,12 +895,19 @@ function App() {
       !isGuidelinesOpen &&
       !isSecurityLearningOpen &&
       !isGlossaryFormOpen &&
-      !isNodeFormOpen
+      !isNodeFormOpen &&
+      !relationFormData
     ) return undefined;
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        if (isNodeKnowledgeOpen) {
+        if (relationFormData) {
+          if (!isSavingRelation) {
+            setPendingConnection(null);
+            setEditingEdgeId(null);
+            setRelationFormError("");
+          }
+        } else if (isNodeKnowledgeOpen) {
           setIsNodeKnowledgeOpen(false);
         } else if (isGuidelinesOpen) {
           setIsGuidelinesOpen(false);
@@ -814,6 +930,8 @@ function App() {
     isSecurityLearningOpen,
     isGlossaryFormOpen,
     isNodeFormOpen,
+    relationFormData,
+    isSavingRelation,
   ]);
 
   if (isLoading || loadError) {
@@ -850,6 +968,7 @@ function App() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgeClick={onEdgeClick}
         onNodeDragStop={handleNodeDragStop}
         onPaneClick={() => setSelectedNodeId(null)}
         nodesDraggable={isAuthenticated}
@@ -944,6 +1063,19 @@ function App() {
             setIsNodeKnowledgeOpen(false);
             setSelectedNodeId(null);
           }}
+        />
+      )}
+      {relationFormData && (
+        <RelationForm
+          error={relationFormError}
+          initialKind={relationFormData.initialKind}
+          isSubmitting={isSavingRelation}
+          key={relationFormData.key}
+          mode={relationFormData.mode}
+          onClose={handleCloseRelationForm}
+          onConfirm={handleConfirmRelation}
+          sourceLabel={relationFormData.sourceLabel}
+          targetLabel={relationFormData.targetLabel}
         />
       )}
       {isGuidelinesOpen && (

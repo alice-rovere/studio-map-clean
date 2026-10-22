@@ -1602,6 +1602,222 @@ body,
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
 }
 
+.relation-form {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.relation-form__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(3, 7, 14, 0.62);
+  cursor: default;
+}
+
+.relation-form__panel {
+  position: relative;
+  width: min(540px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid #33445d;
+  border-radius: 14px;
+  background: #141d2d;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.relation-form__hint {
+  margin: 4px 0 0;
+  color: #8fa0b8;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.relation-form__endpoints {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #2b3a50;
+  border-radius: 9px;
+  background: #0f1725;
+}
+
+.relation-form__endpoint {
+  min-width: 0;
+  overflow: hidden;
+  color: #e8edf5;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relation-form__swap {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid #33445d;
+  border-radius: 7px;
+  color: #c7d0df;
+  background: #192433;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.relation-form__swap:hover {
+  background: #202e41;
+}
+
+.relation-form__swap:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.relation-form__fieldset {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+
+.relation-form__fieldset legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: #b9c5d5;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.relation-form__kinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.relation-form__kind {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid #2b3a50;
+  border-radius: 9px;
+  background: #0f1725;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.relation-form__kind:hover {
+  border-color: #3d5472;
+  background: #121c2c;
+}
+
+.relation-form__kind.is-selected {
+  border-color: var(--kind-color);
+  background: #17253a;
+}
+
+.relation-form__kind:focus-within {
+  outline: 2px solid #7ab8ff;
+  outline-offset: 1px;
+}
+
+.relation-form__kind input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.relation-form__kind-sample {
+  width: 24px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-top: 3px;
+  overflow: visible;
+}
+
+.relation-form__kind-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.relation-form__kind-label {
+  color: var(--kind-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.relation-form__kind-description {
+  color: #8fa0b8;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.relation-form__preview {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #2b3a50;
+  border-radius: 9px;
+  background: #0b1320;
+}
+
+.relation-form__preview-label {
+  flex: 0 0 auto;
+  color: #718097;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.relation-form__sentence {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+  .relation-form {
+    padding: 12px;
+  }
+
+  .relation-form__panel {
+    max-height: calc(100vh - 24px);
+    padding: 14px;
+  }
+
+  .relation-form__kinds {
+    grid-template-columns: 1fr;
+  }
+
+  .relation-form__endpoints {
+    flex-wrap: wrap;
+  }
+}
+
 .glossary-form__header,
 .glossary-form__actions {
   display: flex;
