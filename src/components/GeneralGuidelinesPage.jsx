@@ -63,7 +63,9 @@ const securityPractices = [
 function GuidelineList({ items }) {
   return (
     <ul className="guidelines-page__list">
-      {items.map((item) => <li key={item}>{item}</li>)}
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
     </ul>
   );
 }
@@ -102,8 +104,17 @@ export default function GeneralGuidelinesPage({ onClose }) {
           <h3 id="guidelines-naming-title">Naming convention</h3>
           <p>
             Scegli la forma in base al contesto e mantienila coerente nel
-            progetto. Non cambiare la convenzione richiesta da un framework o
-            da uno schema esistente.
+            progetto. Non cambiare la convenzione richiesta da un framework o da
+            uno schema esistente.
+          </p>
+          <p>
+            <a
+              href="https://aulab.it/blog/le-convenzioni-del-naming-nella-programmazione-informatica"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Approfondisci le convenzioni del naming ---&gt; vai al link
+            </a>
           </p>
           <div className="node-knowledge__table-wrap">
             <table className="node-knowledge__table">
@@ -117,9 +128,13 @@ export default function GeneralGuidelinesPage({ onClose }) {
               <tbody>
                 {namingConventions.map(({ name, usage, example }) => (
                   <tr key={name}>
-                    <td><code>{name}</code></td>
+                    <td>
+                      <code>{name}</code>
+                    </td>
                     <td>{usage}</td>
-                    <td><code>{example}</code></td>
+                    <td>
+                      <code>{example}</code>
+                    </td>
                   </tr>
                 ))}
               </tbody>
