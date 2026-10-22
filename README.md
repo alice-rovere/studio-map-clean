@@ -54,6 +54,14 @@ Selezionando un nodo, il resto della mappa si attenua e il pannello laterale
 raggruppa le relazioni in **Prerequisiti**, **Abilita**, **Alternative** e
 **Correlati**, con collegamenti rapidi agli altri nodi. Un clic sullo sfondo
 rimuove la selezione.
+
+Il pannello **Filtri** in alto a destra consente di cercare un nodo e di
+mostrare o nascondere le categorie; i collegamenti seguono la visibilità dei
+nodi. Il pulsante **Riorganizza** dispone i nodi a livelli da sinistra a destra
+(fondamenta a sinistra, tecnologie derivate a destra), raggruppando le
+alternative nella stessa colonna e riducendo gli incroci. Per gli utenti
+autenticati la nuova disposizione viene salvata su Supabase; per gli altri
+resta solo visiva fino al ricaricamento.
 I contenuti dei nodi e i relativi dettagli vengono letti dalle rispettive
 tabelle. Dalla modale
 di un nodo si può aprire una vista interna a schermo intero; i contenuti estesi

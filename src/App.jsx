@@ -14,6 +14,7 @@ import "@xyflow/react/dist/style.css";
 import {
   BookOpen,
   ChevronDown,
+  LayoutGrid,
   LogIn,
   LogOut,
   Network,
@@ -23,6 +24,7 @@ import {
 import TechNode from "./components/TechNode.jsx";
 import RelationEdge from "./components/RelationEdge.jsx";
 import MapLegend from "./components/MapLegend.jsx";
+import MapFilters from "./components/MapFilters.jsx";
 import GlossaryForm from "./components/GlossaryForm.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
 import NodeForm from "./components/NodeForm.jsx";
@@ -32,6 +34,7 @@ import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
 import { DEFAULT_EDGE_KIND, createFlowEdge } from "./lib/edgeKinds.js";
+import { computeLayeredLayout } from "./lib/layout.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
@@ -40,6 +43,17 @@ const relatedRelationKinds = new Set(["si_integra", "strumento", "ospita"]);
 
 function getRelationKind(edge) {
   return edge.data?.kind ?? "usa";
+}
+
+function resolveHandleSides(sourcePosition, targetPosition) {
+  if (!sourcePosition || !targetPosition) return {};
+  if (sourcePosition.x < targetPosition.x) {
+    return { sourceHandle: "source-right", targetHandle: "target-left" };
+  }
+  if (sourcePosition.x > targetPosition.x) {
+    return { sourceHandle: "source-left", targetHandle: "target-right" };
+  }
+  return { sourceHandle: "source-right", targetHandle: "target-right" };
 }
 
 const studioCategories = [
@@ -98,6 +112,7 @@ function MapActions({
   onCloseNodeForm,
   onOpenGuidelines,
   onOpenSecurity,
+  onAutoLayout,
   nodes,
   onSelectNode,
 }) {
@@ -226,6 +241,20 @@ function MapActions({
           })}
         </nav>
         <div className="studio-map__actions">
+          <button
+            className="studio-map__action-button studio-map__node-button"
+            onClick={() => {
+              onAutoLayout();
+              requestAnimationFrame(() =>
+                fitView({ padding: 0.2, duration: 600 }),
+              );
+            }}
+            title="Disponi i nodi per livelli da sinistra a destra"
+            type="button"
+          >
+            <LayoutGrid aria-hidden="true" size={15} />
+            Riorganizza
+          </button>
           {isAuthenticated ? (
             <>
               <button
@@ -315,15 +344,37 @@ function App() {
       : "Configurazione Supabase mancante. Imposta VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.",
   );
   const [mutationError, setMutationError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const isAuthenticated = Boolean(session?.user);
 
+  const visibleNodes = useMemo(() => {
+    const query = searchTerm.trim().toLocaleLowerCase();
+    return nodes.filter((node) => {
+      const category = node.data.category?.toLowerCase();
+      if (hiddenCategories.has(category)) return false;
+      if (query && !node.data.label.toLocaleLowerCase().includes(query)) {
+        return false;
+      }
+      return true;
+    });
+  }, [nodes, hiddenCategories, searchTerm]);
+
+  const visibleEdges = useMemo(() => {
+    const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
+    return edges.filter(
+      (edge) =>
+        visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
+    );
+  }, [edges, visibleNodes]);
+
   const focus = useMemo(() => {
     if (!selectedNodeId) return null;
 
-    const nodesById = new Map(nodes.map((node) => [node.id, node]));
+    const nodesById = new Map(visibleNodes.map((node) => [node.id, node]));
     const prerequisites = [];
     const enables = [];
     const alternatives = [];
@@ -339,7 +390,7 @@ function App() {
       list.push(node);
     }
 
-    edges.forEach((edge) => {
+    visibleEdges.forEach((edge) => {
       const isSource = edge.source === selectedNodeId;
       const isTarget = edge.target === selectedNodeId;
       if (!isSource && !isTarget) return;
@@ -367,25 +418,30 @@ function App() {
       nodeIds: assigned,
       edgeIds,
     };
-  }, [selectedNodeId, nodes, edges]);
+  }, [selectedNodeId, visibleNodes, visibleEdges]);
 
   const displayNodes = useMemo(() => {
-    if (!focus) return nodes;
-    return nodes.map((node) =>
+    if (!focus) return visibleNodes;
+    return visibleNodes.map((node) =>
       focus.nodeIds.has(node.id)
         ? node
         : { ...node, className: "is-dimmed" },
     );
-  }, [nodes, focus]);
+  }, [visibleNodes, focus]);
 
   const displayEdges = useMemo(() => {
-    if (!focus) return edges;
-    return edges.map((edge) =>
-      focus.edgeIds.has(edge.id)
-        ? edge
-        : { ...edge, className: "is-dimmed" },
+    const positions = new Map(
+      visibleNodes.map((node) => [node.id, node.position]),
     );
-  }, [edges, focus]);
+    return visibleEdges.map((edge) => {
+      const handles = resolveHandleSides(
+        positions.get(edge.source),
+        positions.get(edge.target),
+      );
+      const isDimmed = focus && !focus.edgeIds.has(edge.id);
+      return { ...edge, ...handles, className: isDimmed ? "is-dimmed" : undefined };
+    });
+  }, [visibleNodes, visibleEdges, focus]);
 
   const loadStudioMap = useCallback(async () => {
     if (!supabase) return;
@@ -687,6 +743,63 @@ function App() {
     setMutationError("");
   }
 
+  async function handleAutoLayout() {
+    if (nodes.length === 0) return;
+
+    const positions = computeLayeredLayout(nodes, edges);
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        const position = positions.get(node.id);
+        return position ? { ...node, position } : node;
+      }),
+    );
+
+    if (!supabase || !isAuthenticated) return;
+
+    const payload = nodes.map((node) => {
+      const position = positions.get(node.id);
+      return {
+        id: node.id,
+        label: node.data.label,
+        category: node.data.category,
+        position_x: position.x,
+        position_y: position.y,
+      };
+    });
+
+    const { error } = await supabase.from("nodes").upsert(payload);
+    if (error) {
+      console.error("Impossibile salvare la disposizione dei nodi.", error);
+      setMutationError(`Impossibile salvare la disposizione: ${error.message}`);
+      return;
+    }
+    setMutationError("");
+  }
+
+  function handleSearchChange(value) {
+    setSearchTerm(value);
+    setSelectedNodeId(null);
+  }
+
+  function handleToggleCategory(category) {
+    setHiddenCategories((current) => {
+      const next = new Set(current);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+    setSelectedNodeId(null);
+  }
+
+  function handleResetFilters() {
+    setHiddenCategories(new Set());
+    setSearchTerm("");
+    setSelectedNodeId(null);
+  }
+
   async function handleRequestMagicLink(email) {
     if (!supabase) return "Configurazione Supabase mancante.";
 
@@ -803,6 +916,14 @@ function App() {
       >
         <Background variant="dots" gap={16} size={1} color="#273349" />
         <Controls />
+        <MapFilters
+          categories={nodeCategories}
+          hiddenCategories={hiddenCategories}
+          onReset={handleResetFilters}
+          onSearchChange={handleSearchChange}
+          onToggleCategory={handleToggleCategory}
+          searchTerm={searchTerm}
+        />
         <MapActions
           nodes={nodes}
           isGlossaryFormOpen={isGlossaryFormOpen}
@@ -815,6 +936,7 @@ function App() {
           onRequestMagicLink={handleRequestMagicLink}
           onCloseAuthPanel={() => setIsAuthPanelOpen(false)}
           onSignOut={handleSignOut}
+          onAutoLayout={handleAutoLayout}
           onToggleGlossary={() => {
             setIsGlossaryFormOpen((isOpen) => !isOpen);
             setIsNodeFormOpen(false);

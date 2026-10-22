@@ -6,10 +6,32 @@ export default function TechNode({ data }) {
 
   return (
     <div className={`studio-node ${categoryClass}`}>
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        className="studio-node__handle--target"
+        id="target-left"
+        position={Position.Left}
+        type="target"
+      />
+      <Handle
+        className="studio-node__handle--source"
+        id="source-left"
+        position={Position.Left}
+        type="source"
+      />
+      <Handle
+        className="studio-node__handle--target"
+        id="target-right"
+        position={Position.Right}
+        type="target"
+      />
+      <Handle
+        className="studio-node__handle--source"
+        id="source-right"
+        position={Position.Right}
+        type="source"
+      />
       <div className="studio-node__category">{data.category}</div>
       <div className="studio-node__label">{data.label}</div>
-      <Handle type="source" position={Position.Right} />
     </div>
   );
 }
