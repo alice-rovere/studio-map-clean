@@ -34,6 +34,10 @@ import GeneralGuidelinesPage from "./components/GeneralGuidelinesPage.jsx";
 import SecurityLearningPage from "./components/SecurityLearningPage.jsx";
 import { supabase } from "./lib/supabase.js";
 import { DEFAULT_EDGE_KIND, createFlowEdge } from "./lib/edgeKinds.js";
+import {
+  NODE_SUBCATEGORY_OPTIONS,
+  getSubcategoryLabel,
+} from "./lib/nodeSubcategories.js";
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
@@ -117,12 +121,12 @@ function MapActions({
   const { screenToFlowPosition, fitView } = useReactFlow();
   const [openCategory, setOpenCategory] = useState(null);
 
-  function handleAddNode({ label, category }) {
+  function handleAddNode({ label, category, subcategory }) {
     const position = screenToFlowPosition({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
     });
-    return onAddNode({ label, category, position });
+    return onAddNode({ label, category, subcategory, position });
   }
 
   function handleSelectNode(node) {
@@ -224,7 +228,10 @@ function MapActions({
                           onClick={() => handleSelectNode(node)}
                           type="button"
                         >
-                          {node.data.label}
+                          <span>{node.data.label}</span>
+                          <span className="studio-map__category-item-subcategory">
+                            {getSubcategoryLabel(node.data.subcategory)}
+                          </span>
                         </button>
                       ))
                     ) : (
@@ -290,6 +297,7 @@ function MapActions({
           {isNodeFormOpen && isAuthenticated && (
             <NodeForm
               categories={nodeCategories}
+              subcategories={NODE_SUBCATEGORY_OPTIONS}
               onAddNode={handleAddNode}
               onClose={onCloseNodeForm}
             />
@@ -333,6 +341,7 @@ function App() {
   );
   const [mutationError, setMutationError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
@@ -377,12 +386,21 @@ function App() {
     return nodes.filter((node) => {
       const category = node.data.category?.toLowerCase();
       if (hiddenCategories.has(category)) return false;
-      if (query && !node.data.label.toLocaleLowerCase().includes(query)) {
+      if (
+        selectedSubcategory &&
+        node.data.subcategory !== selectedSubcategory
+      ) {
         return false;
+      }
+      if (query) {
+        const searchable = `${node.data.label} ${getSubcategoryLabel(
+          node.data.subcategory,
+        )}`.toLocaleLowerCase();
+        if (!searchable.includes(query)) return false;
       }
       return true;
     });
-  }, [nodes, hiddenCategories, searchTerm]);
+  }, [nodes, hiddenCategories, selectedSubcategory, searchTerm]);
 
   const visibleEdges = useMemo(() => {
     const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
@@ -470,7 +488,9 @@ function App() {
     try {
       const [nodesResult, edgesResult, glossaryResult, detailsResult] =
         await Promise.all([
-          supabase.from("nodes").select("id,label,category,position_x,position_y"),
+          supabase
+            .from("nodes")
+            .select("id,label,category,subcategory,position_x,position_y"),
           supabase.from("edges").select("id,source,target,type,kind"),
           supabase.from("glossary").select("id,term,definition").order("term"),
           supabase
@@ -492,7 +512,11 @@ function App() {
         id: node.id,
         type: "techNode",
         position: { x: node.position_x, y: node.position_y },
-        data: { label: node.label, category: node.category },
+        data: {
+          label: node.label,
+          category: node.category,
+          subcategory: node.subcategory,
+        },
       }));
       const nodeLabels = new Map(
         nodesResult.data.map((node) => [node.id, node.label]),
@@ -757,7 +781,7 @@ function App() {
     return null;
   }
 
-  async function handleAddNode({ label, category, position }) {
+  async function handleAddNode({ label, category, subcategory, position }) {
     if (!supabase) return "Configurazione Supabase mancante.";
     if (!isAuthenticated) return "Accedi per aggiungere nodi.";
 
@@ -765,6 +789,7 @@ function App() {
       id: crypto.randomUUID(),
       label: label.trim(),
       category,
+      subcategory,
       position_x: position.x,
       position_y: position.y,
     };
@@ -780,7 +805,11 @@ function App() {
         id: node.id,
         type: "techNode",
         position,
-        data: { label: node.label, category: node.category },
+        data: {
+          label: node.label,
+          category: node.category,
+          subcategory: node.subcategory,
+        },
       },
     ]);
     setIsNodeFormOpen(false);
@@ -855,6 +884,7 @@ function App() {
 
   function handleResetFilters() {
     setHiddenCategories(new Set());
+    setSelectedSubcategory("");
     setSearchTerm("");
     setSelectedNodeId(null);
   }
@@ -987,11 +1017,17 @@ function App() {
         <Controls />
         <MapFilters
           categories={nodeCategories}
+          subcategories={NODE_SUBCATEGORY_OPTIONS}
           hiddenCategories={hiddenCategories}
           onReset={handleResetFilters}
           onSearchChange={handleSearchChange}
+          onSubcategoryChange={(value) => {
+            setSelectedSubcategory(value);
+            setSelectedNodeId(null);
+          }}
           onToggleCategory={handleToggleCategory}
           searchTerm={searchTerm}
+          selectedSubcategory={selectedSubcategory}
         />
         <MapActions
           nodes={nodes}

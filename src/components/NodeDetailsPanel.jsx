@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import GlossaryText from "./GlossaryText.jsx";
+import { getSubcategoryLabel } from "../lib/nodeSubcategories.js";
 
 const emptyDetails = {
   description: "Esplora questa tecnologia e il suo ruolo nell'ecosistema dello studio.",
@@ -87,7 +88,14 @@ export default function NodeDetailsPanel({
         <header className="node-details__header">
           <div>
             <span className="node-details__eyebrow">NODE INSPECTOR</span>
-            <div className="node-details__category">{node.data.category}</div>
+            <div className="node-details__meta">
+              <span className="node-details__category">{node.data.category}</span>
+              {node.data.subcategory && (
+                <span className="node-details__subcategory">
+                  {getSubcategoryLabel(node.data.subcategory)}
+                </span>
+              )}
+            </div>
           </div>
           <button
             aria-label="Chiudi pannello"

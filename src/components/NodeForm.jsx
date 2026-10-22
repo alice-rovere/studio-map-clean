@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-export default function NodeForm({ categories, onAddNode, onClose }) {
+export default function NodeForm({
+  categories,
+  subcategories,
+  onAddNode,
+  onClose,
+}) {
   const [label, setLabel] = useState("");
   const [category, setCategory] = useState(categories[0]);
+  const [subcategory, setSubcategory] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -14,10 +20,18 @@ export default function NodeForm({ categories, onAddNode, onClose }) {
       setError("Inserisci il nome del nodo.");
       return;
     }
+    if (!subcategory) {
+      setError("Seleziona la sottocategoria del nodo.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const addError = await onAddNode({ label: normalizedLabel, category });
+      const addError = await onAddNode({
+        label: normalizedLabel,
+        category,
+        subcategory,
+      });
       if (addError) {
         setError(addError);
         return;
@@ -62,6 +76,22 @@ export default function NodeForm({ categories, onAddNode, onClose }) {
           {categories.map((item) => (
             <option key={item} value={item}>
               {item}
+            </option>
+          ))}
+        </select>
+        <label htmlFor="node-subcategory">Sottocategoria</label>
+        <select
+          disabled={isSubmitting}
+          id="node-subcategory"
+          onChange={(event) => setSubcategory(event.target.value)}
+          value={subcategory}
+        >
+          <option disabled value="">
+            Seleziona una sottocategoria
+          </option>
+          {subcategories.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
             </option>
           ))}
         </select>

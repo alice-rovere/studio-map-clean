@@ -3,13 +3,19 @@ import { Search, X } from "lucide-react";
 
 export default function MapFilters({
   categories,
+  subcategories,
   hiddenCategories,
   searchTerm,
+  selectedSubcategory,
   onSearchChange,
+  onSubcategoryChange,
   onToggleCategory,
   onReset,
 }) {
-  const hasFilters = searchTerm.trim().length > 0 || hiddenCategories.size > 0;
+  const hasFilters =
+    searchTerm.trim().length > 0 ||
+    hiddenCategories.size > 0 ||
+    Boolean(selectedSubcategory);
 
   return (
     <Panel aria-label="Filtri della mappa" className="map-filters" position="top-right">
@@ -39,6 +45,21 @@ export default function MapFilters({
           );
         })}
       </div>
+      <label className="map-filters__subcategory">
+        <span>Sottocategoria</span>
+        <select
+          aria-label="Filtra per sottocategoria"
+          onChange={(event) => onSubcategoryChange(event.target.value)}
+          value={selectedSubcategory}
+        >
+          <option value="">Tutte</option>
+          {subcategories.map((subcategory) => (
+            <option key={subcategory.id} value={subcategory.id}>
+              {subcategory.label}
+            </option>
+          ))}
+        </select>
+      </label>
       {hasFilters && (
         <button className="map-filters__reset" onClick={onReset} type="button">
           <X aria-hidden="true" size={13} />

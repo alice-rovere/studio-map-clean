@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
+import { getSubcategoryLabel } from "../lib/nodeSubcategories.js";
 
 function ContentBlock({ block }) {
   if (!block || typeof block !== "object") {
@@ -207,7 +208,14 @@ export default function NodeKnowledgePage({
       </header>
 
       <div className="node-knowledge__body">
-        <span className="node-details__category">{node.data.category}</span>
+        <div className="node-details__meta">
+          <span className="node-details__category">{node.data.category}</span>
+          {node.data.subcategory && (
+            <span className="node-details__subcategory">
+              {getSubcategoryLabel(node.data.subcategory)}
+            </span>
+          )}
+        </div>
         <h2 id="node-knowledge-title">{node.data.label}</h2>
         {isEditing && canEdit ? (
           <form className="node-knowledge__editor" onSubmit={handleSave}>
