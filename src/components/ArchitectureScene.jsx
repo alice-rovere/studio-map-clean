@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { Html, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import {
   ARCHITECTURE_CATEGORIES,
   ARCHITECTURE_FLOWS,
@@ -24,11 +24,19 @@ const LEVEL_Y = {
 const devopsCategory = ARCHITECTURE_CATEGORIES.find(
   (category) => category.id === "devops",
 );
+const ORIGIN = [0, 0, 0];
+
 function ResponsiveCamera() {
   const { camera, size } = useThree();
+  const narrowLayout = useRef(null);
 
   useEffect(() => {
+    if (!size.width || !size.height) return;
+
     const isNarrow = size.width / size.height < 0.8;
+    if (narrowLayout.current === isNarrow) return;
+    narrowLayout.current = isNarrow;
+
     camera.position.set(
       isNarrow ? 9.4 : 7.6,
       isNarrow ? 6.1 : 5,
@@ -177,11 +185,6 @@ export default function ArchitectureScene({
           />
         ))}
 
-        <Html
-          position={[0, 0, 0]}
-          style={{ display: "none" }}
-          zIndexRange={[0, 0]}
-        />
         {devopsItems.map((item) => (
           <DevOpsNodeLabel
             key={item.id}
@@ -227,7 +230,7 @@ export default function ArchitectureScene({
         maxPolarAngle={2.22}
         minDistance={6.5}
         minPolarAngle={0.55}
-        target={[0, 0, 0]}
+        target={ORIGIN}
       />
     </Canvas>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MousePointer2, RotateCcw, X } from "lucide-react";
 import {
   ARCHITECTURE_CATEGORIES,
@@ -36,6 +36,7 @@ export default function ArchitecturePanel({
   onSelectNode,
 }) {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const leaveTimer = useRef(null);
   const reducedMotion = useReducedMotion();
   const activeItem = getArchitectureCategory(activeCategory);
   const infoItem = hoveredItem ?? activeItem;
@@ -49,11 +50,30 @@ export default function ArchitecturePanel({
     [nodeDetails, nodes],
   );
 
+  useEffect(() => () => clearTimeout(leaveTimer.current), []);
+
+  const handleHoverItem = useCallback((item) => {
+    clearTimeout(leaveTimer.current);
+    leaveTimer.current = null;
+    setHoveredItem((previous) =>
+      previous?.id === item.id ? previous : item,
+    );
+  }, []);
+
+  const handleLeaveItem = useCallback(() => {
+    clearTimeout(leaveTimer.current);
+    leaveTimer.current = setTimeout(() => {
+      leaveTimer.current = null;
+      setHoveredItem(null);
+    }, 140);
+  }, []);
+
   return (
     <aside
+      aria-hidden={!isOpen}
       aria-labelledby="architecture-panel-title"
-      className="architecture-panel"
-      hidden={!isOpen}
+      className={`architecture-panel${isOpen ? "" : " architecture-panel--closed"}`}
+      inert={!isOpen}
     >
       <header className="architecture-panel__header">
         <div>
@@ -77,8 +97,8 @@ export default function ArchitecturePanel({
           devopsItems={devopsItems}
           hoveredId={hoveredItem?.id}
           isOpen={isOpen}
-          onHoverItem={setHoveredItem}
-          onLeaveItem={() => setHoveredItem(null)}
+          onHoverItem={handleHoverItem}
+          onLeaveItem={handleLeaveItem}
           onSelectCategory={onSelectCategory}
           onSelectNode={onSelectNode}
           reducedMotion={reducedMotion}
@@ -89,6 +109,23 @@ export default function ArchitecturePanel({
           Trascina per ruotare · Scroll per zoom
         </span>
       </div>
+
+      {devopsItems.length > 0 && (
+        <div className="visually-hidden">
+          <ul>
+            {devopsItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => onSelectNode(item.nodeId, item.category)}
+                  type="button"
+                >
+                  Apri {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div
         aria-label="Filtra la mappa per livello"
@@ -101,10 +138,10 @@ export default function ArchitecturePanel({
             className={`architecture-level architecture-level--${category.id}`}
             key={category.id}
             onClick={() => onSelectCategory(category.id)}
-            onFocus={() => setHoveredItem(category)}
-            onBlur={() => setHoveredItem(null)}
-            onMouseEnter={() => setHoveredItem(category)}
-            onMouseLeave={() => setHoveredItem(null)}
+            onBlur={handleLeaveItem}
+            onFocus={() => handleHoverItem(category)}
+            onMouseEnter={() => handleHoverItem(category)}
+            onMouseLeave={handleLeaveItem}
             type="button"
           >
             {category.label}
