@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   addEdge,
   applyEdgeChanges,
@@ -13,6 +21,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   BookOpen,
+  Boxes,
   ChevronDown,
   LogIn,
   LogOut,
@@ -38,6 +47,10 @@ import {
   NODE_SUBCATEGORY_OPTIONS,
   getSubcategoryLabel,
 } from "./lib/nodeSubcategories.js";
+
+const ArchitecturePanel = lazy(
+  () => import("./components/ArchitecturePanel.jsx"),
+);
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
@@ -96,6 +109,16 @@ function getErrorMessage(error) {
   return error instanceof Error ? error.message : "Errore imprevisto.";
 }
 
+function getIsolatedCategory(hiddenCategories, searchTerm, selectedSubcategory) {
+  if (searchTerm.trim() || selectedSubcategory) return null;
+  if (hiddenCategories.size !== nodeCategories.length - 1) return null;
+
+  const visibleCategories = nodeCategories.filter(
+    (category) => !hiddenCategories.has(category),
+  );
+  return visibleCategories.length === 1 ? visibleCategories[0] : null;
+}
+
 function MapActions({
   isGlossaryFormOpen,
   isNodeFormOpen,
@@ -115,6 +138,7 @@ function MapActions({
   onCloseNodeForm,
   onOpenGuidelines,
   onOpenSecurity,
+  onOpenArchitecture,
   nodes,
   onSelectNode,
 }) {
@@ -166,6 +190,14 @@ function MapActions({
             >
               <ShieldCheck aria-hidden="true" size={15} />
               Sicurezza informatica
+            </button>
+            <button
+              className="studio-map__header-link"
+              onClick={onOpenArchitecture}
+              type="button"
+            >
+              <Boxes aria-hidden="true" size={15} />
+              Architettura 3D
             </button>
           </nav>
         </div>
@@ -319,6 +351,7 @@ function App() {
   const [isNodeKnowledgeOpen, setIsNodeKnowledgeOpen] = useState(false);
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const [isSecurityLearningOpen, setIsSecurityLearningOpen] = useState(false);
+  const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [isAuthPanelOpen, setIsAuthPanelOpen] = useState(false);
@@ -343,9 +376,15 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
+  const flowInstanceRef = useRef(null);
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+  const activeArchitectureCategory = getIsolatedCategory(
+    hiddenCategories,
+    searchTerm,
+    selectedSubcategory,
+  );
   const isAuthenticated = Boolean(session?.user);
   const nodeLabels = useMemo(
     () => new Map(nodes.map((node) => [node.id, node.data.label])),
@@ -889,6 +928,42 @@ function App() {
     setSelectedNodeId(null);
   }
 
+  function fitVisibleFlow() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flowInstanceRef.current?.fitView({
+          duration: 500,
+          maxZoom: 1.2,
+          padding: 0.25,
+        });
+      });
+    });
+  }
+
+  function handleArchitectureCategory(category) {
+    if (activeArchitectureCategory === category) {
+      setHiddenCategories(new Set());
+    } else {
+      setHiddenCategories(
+        new Set(
+          nodeCategories.filter(
+            (visibleCategory) => visibleCategory !== category,
+          ),
+        ),
+      );
+    }
+    setSelectedSubcategory("");
+    setSearchTerm("");
+    setSelectedNodeId(null);
+    setIsNodeKnowledgeOpen(false);
+    fitVisibleFlow();
+  }
+
+  function handleResetArchitectureFilter() {
+    handleResetFilters();
+    fitVisibleFlow();
+  }
+
   async function handleRequestMagicLink(email) {
     if (!supabase) return "Configurazione Supabase mancante.";
 
@@ -924,6 +999,7 @@ function App() {
       !isNodeKnowledgeOpen &&
       !isGuidelinesOpen &&
       !isSecurityLearningOpen &&
+      !isArchitectureOpen &&
       !isGlossaryFormOpen &&
       !isNodeFormOpen &&
       !relationFormData
@@ -943,6 +1019,12 @@ function App() {
           setIsGuidelinesOpen(false);
         } else if (isSecurityLearningOpen) {
           setIsSecurityLearningOpen(false);
+        } else if (selectedNodeId) {
+          setSelectedNodeId(null);
+          setIsGlossaryFormOpen(false);
+          setIsNodeFormOpen(false);
+        } else if (isArchitectureOpen) {
+          setIsArchitectureOpen(false);
         } else {
           setSelectedNodeId(null);
           setIsGlossaryFormOpen(false);
@@ -958,6 +1040,7 @@ function App() {
     isNodeKnowledgeOpen,
     isGuidelinesOpen,
     isSecurityLearningOpen,
+    isArchitectureOpen,
     isGlossaryFormOpen,
     isNodeFormOpen,
     relationFormData,
@@ -1000,6 +1083,9 @@ function App() {
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
         onNodeDragStop={handleNodeDragStop}
+        onInit={(instance) => {
+          flowInstanceRef.current = instance;
+        }}
         onPaneClick={() => setSelectedNodeId(null)}
         nodesDraggable={isAuthenticated}
         nodesConnectable={isAuthenticated}
@@ -1055,14 +1141,25 @@ function App() {
           onCloseNodeForm={() => setIsNodeFormOpen(false)}
           onOpenGuidelines={() => {
             setIsGuidelinesOpen(true);
+            setIsArchitectureOpen(false);
             setIsGlossaryFormOpen(false);
             setIsNodeFormOpen(false);
             setSelectedNodeId(null);
           }}
           onOpenSecurity={() => {
             setIsSecurityLearningOpen(true);
+            setIsArchitectureOpen(false);
             setIsGlossaryFormOpen(false);
             setIsNodeFormOpen(false);
+            setSelectedNodeId(null);
+          }}
+          onOpenArchitecture={() => {
+            setIsArchitectureOpen(true);
+            setIsGuidelinesOpen(false);
+            setIsSecurityLearningOpen(false);
+            setIsGlossaryFormOpen(false);
+            setIsNodeFormOpen(false);
+            setIsNodeKnowledgeOpen(false);
             setSelectedNodeId(null);
           }}
           onSelectNode={(nodeId) => {
@@ -1122,6 +1219,25 @@ function App() {
           onBack={() => setIsSecurityLearningOpen(false)}
           onClose={() => setIsSecurityLearningOpen(false)}
         />
+      )}
+      {isArchitectureOpen && (
+        <Suspense
+          fallback={
+            <aside
+              className="architecture-panel architecture-panel--loading"
+              role="status"
+            >
+              Caricamento architettura 3D…
+            </aside>
+          }
+        >
+          <ArchitecturePanel
+            activeCategory={activeArchitectureCategory}
+            onClose={() => setIsArchitectureOpen(false)}
+            onResetFilter={handleResetArchitectureFilter}
+            onSelectCategory={handleArchitectureCategory}
+          />
+        </Suspense>
       )}
     </main>
   );
