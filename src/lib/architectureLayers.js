@@ -1,3 +1,5 @@
+import { getSubcategoryLabel } from "./nodeSubcategories.js";
+
 export const ARCHITECTURE_CATEGORIES = [
   {
     id: "frontend",
@@ -45,56 +47,96 @@ export const ARCHITECTURE_LAYERS = ARCHITECTURE_CATEGORIES.filter((item) =>
   ["frontend", "backend", "database"].includes(item.id),
 );
 
-export const ARCHITECTURE_TOOLS = [
-  {
-    id: "git",
-    label: "Git",
-    description:
-      "Controllo versione distribuito per tracciare l'evoluzione del codice.",
-    shape: "octahedron",
-    position: [3.35, 2.65, 0.45],
-  },
-  {
-    id: "docker",
-    label: "Docker",
-    description:
-      "Container riproducibili per eseguire servizi e ambienti di sviluppo.",
-    shape: "box",
-    position: [-3.4, 1.5, -0.55],
-  },
-  {
-    id: "vite",
-    label: "Vite",
-    description:
-      "Build tool e dev server rapido per il frontend moderno.",
-    shape: "tetrahedron",
-    position: [3.4, 0.05, -0.5],
-  },
-  {
-    id: "pnpm",
-    label: "pnpm",
-    description:
-      "Package manager efficiente per installare e gestire le dipendenze.",
-    shape: "torusKnot",
-    position: [-3.35, -0.85, 0.5],
-  },
-  {
-    id: "vscode",
-    label: "VS Code",
-    description:
-      "Editor di codice con estensioni per scrittura, debug e revisione.",
-    shape: "dodecahedron",
-    position: [3.3, -1.95, 0.55],
-  },
-  {
-    id: "actions",
-    label: "GitHub Actions",
-    description:
-      "Automazione CI/CD per test, build e distribuzione dei progetti.",
-    shape: "icosahedron",
-    position: [-3.35, -2.6, -0.45],
-  },
+const TOOL_SHAPES = [
+  "octahedron",
+  "box",
+  "tetrahedron",
+  "torusKnot",
+  "dodecahedron",
+  "icosahedron",
 ];
+
+function buildToolPosition(index, total) {
+  const side = index % 2;
+  const rank = Math.floor(index / 2);
+  const perSide = Math.ceil(total / 2);
+  const step = perSide > 1 ? 5.5 / (perSide - 1) : 0;
+  const y = perSide > 1 ? 2.75 - step * rank : 0;
+
+  return [side === 0 ? 3.35 : -3.35, y, side === 0 ? 0.5 : -0.5];
+}
+
+function buildDevOpsPosition(index, total) {
+  const side = index % 2;
+  const rank = Math.floor(index / 2);
+  const perSide = Math.ceil(total / 2);
+  const step = perSide > 1 ? 4.6 / (perSide - 1) : 0;
+  const y = perSide > 1 ? 2.3 - step * rank : 0;
+
+  return [side === 0 ? 2.85 : -2.85, y, 1.84];
+}
+
+function buildNodeTagline(prefix, subcategory) {
+  const label = getSubcategoryLabel(subcategory);
+  return label ? `${prefix} \u00b7 ${label}` : prefix;
+}
+
+function buildNodeDescription(details, category) {
+  const description = details?.description?.trim();
+  if (description) return description;
+
+  return category === "tools"
+    ? "Strumento di supporto della mappa, usato nel lavoro quotidiano dello studio."
+    : "Nodo DevOps della mappa: infrastruttura, automazione o processo di distribuzione.";
+}
+
+function getArchitectureNodes(nodes, categoryId) {
+  return [...nodes]
+    .filter((node) => node.data?.category?.toLowerCase() === categoryId)
+    .sort((first, second) =>
+      (first.data?.label ?? "").localeCompare(
+        second.data?.label ?? "",
+        "it",
+      ),
+    );
+}
+
+export function buildArchitectureToolItems(nodes = [], detailsByNode = {}) {
+  const category = getArchitectureCategory("tools");
+  if (!category) return [];
+
+  const toolNodes = getArchitectureNodes(nodes, category.id);
+
+  return toolNodes.map((node, index) => ({
+    id: node.id,
+    nodeId: node.id,
+    label: node.data.label,
+    category: category.id,
+    accent: category.accent,
+    tagline: buildNodeTagline("Tool", node.data.subcategory),
+    description: buildNodeDescription(detailsByNode[node.id], category.id),
+    shape: TOOL_SHAPES[index % TOOL_SHAPES.length],
+    position: buildToolPosition(index, toolNodes.length),
+  }));
+}
+
+export function buildArchitectureDevOpsItems(nodes = [], detailsByNode = {}) {
+  const category = getArchitectureCategory("devops");
+  if (!category) return [];
+
+  const devopsNodes = getArchitectureNodes(nodes, category.id);
+
+  return devopsNodes.map((node, index) => ({
+    id: node.id,
+    nodeId: node.id,
+    label: node.data.label,
+    category: category.id,
+    accent: category.accent,
+    tagline: buildNodeTagline("DevOps", node.data.subcategory),
+    description: buildNodeDescription(detailsByNode[node.id], category.id),
+    position: buildDevOpsPosition(index, devopsNodes.length),
+  }));
+}
 
 export const ARCHITECTURE_FLOWS = [
   {

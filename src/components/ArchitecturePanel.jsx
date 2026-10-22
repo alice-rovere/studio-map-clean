@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MousePointer2, RotateCcw, X } from "lucide-react";
 import {
   ARCHITECTURE_CATEGORIES,
+  buildArchitectureDevOpsItems,
+  buildArchitectureToolItems,
   getArchitectureCategory,
 } from "../lib/architectureLayers.js";
 import ArchitectureScene from "./ArchitectureScene.jsx";
@@ -25,20 +27,33 @@ function useReducedMotion() {
 
 export default function ArchitecturePanel({
   activeCategory,
+  nodeDetails = {},
+  nodes = [],
+  isOpen = true,
   onClose,
   onResetFilter,
   onSelectCategory,
+  onSelectNode,
 }) {
   const [hoveredItem, setHoveredItem] = useState(null);
   const reducedMotion = useReducedMotion();
   const activeItem = getArchitectureCategory(activeCategory);
   const infoItem = hoveredItem ?? activeItem;
   const infoAccent = infoItem?.accent ?? "#7ab8ff";
+  const toolItems = useMemo(
+    () => buildArchitectureToolItems(nodes, nodeDetails),
+    [nodeDetails, nodes],
+  );
+  const devopsItems = useMemo(
+    () => buildArchitectureDevOpsItems(nodes, nodeDetails),
+    [nodeDetails, nodes],
+  );
 
   return (
     <aside
       aria-labelledby="architecture-panel-title"
       className="architecture-panel"
+      hidden={!isOpen}
     >
       <header className="architecture-panel__header">
         <div>
@@ -59,11 +74,15 @@ export default function ArchitecturePanel({
       <div className="architecture-panel__scene">
         <ArchitectureScene
           activeCategory={activeCategory}
+          devopsItems={devopsItems}
           hoveredId={hoveredItem?.id}
+          isOpen={isOpen}
           onHoverItem={setHoveredItem}
           onLeaveItem={() => setHoveredItem(null)}
           onSelectCategory={onSelectCategory}
+          onSelectNode={onSelectNode}
           reducedMotion={reducedMotion}
+          toolItems={toolItems}
         />
         <span className="architecture-panel__hint">
           <MousePointer2 aria-hidden="true" size={11} />
@@ -113,9 +132,9 @@ export default function ArchitecturePanel({
             </span>
             <h3>Esplora la struttura</h3>
             <p>
-              Seleziona un livello o uno strumento per filtrare la mappa:
-              vedrai solo i nodi della categoria scelta. Clicca di nuovo per
-              rimuovere il filtro.
+              Seleziona un livello per filtrare la mappa, oppure un tool o un
+              nodo DevOps per aprire direttamente la sua scheda. Clicca di
+              nuovo sul livello per rimuovere il filtro.
             </p>
           </>
         )}

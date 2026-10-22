@@ -352,6 +352,7 @@ function App() {
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const [isSecurityLearningOpen, setIsSecurityLearningOpen] = useState(false);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
+  const [hasOpenedArchitecture, setHasOpenedArchitecture] = useState(false);
   const [isGlossaryFormOpen, setIsGlossaryFormOpen] = useState(false);
   const [isNodeFormOpen, setIsNodeFormOpen] = useState(false);
   const [isAuthPanelOpen, setIsAuthPanelOpen] = useState(false);
@@ -940,6 +941,19 @@ function App() {
     });
   }
 
+  function fitNodeInFlow(nodeId) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flowInstanceRef.current?.fitView({
+          nodes: [{ id: nodeId }],
+          duration: 500,
+          maxZoom: 1,
+          padding: 0.4,
+        });
+      });
+    });
+  }
+
   function handleArchitectureCategory(category) {
     if (activeArchitectureCategory === category) {
       setHiddenCategories(new Set());
@@ -957,6 +971,21 @@ function App() {
     setSelectedNodeId(null);
     setIsNodeKnowledgeOpen(false);
     fitVisibleFlow();
+  }
+
+  function handleArchitectureNode(nodeId, category) {
+    setHiddenCategories(
+      new Set(
+        nodeCategories.filter(
+          (visibleCategory) => visibleCategory !== category,
+        ),
+      ),
+    );
+    setSelectedSubcategory("");
+    setSearchTerm("");
+    setSelectedNodeId(nodeId);
+    setIsNodeKnowledgeOpen(false);
+    fitNodeInFlow(nodeId);
   }
 
   function handleResetArchitectureFilter() {
@@ -1155,6 +1184,7 @@ function App() {
           }}
           onOpenArchitecture={() => {
             setIsArchitectureOpen(true);
+            setHasOpenedArchitecture(true);
             setIsGuidelinesOpen(false);
             setIsSecurityLearningOpen(false);
             setIsGlossaryFormOpen(false);
@@ -1220,7 +1250,7 @@ function App() {
           onClose={() => setIsSecurityLearningOpen(false)}
         />
       )}
-      {isArchitectureOpen && (
+      {(isArchitectureOpen || hasOpenedArchitecture) && (
         <Suspense
           fallback={
             <aside
@@ -1233,9 +1263,13 @@ function App() {
         >
           <ArchitecturePanel
             activeCategory={activeArchitectureCategory}
+            nodeDetails={nodeDetails}
+            nodes={nodes}
+            isOpen={isArchitectureOpen}
             onClose={() => setIsArchitectureOpen(false)}
             onResetFilter={handleResetArchitectureFilter}
             onSelectCategory={handleArchitectureCategory}
+            onSelectNode={handleArchitectureNode}
           />
         </Suspense>
       )}

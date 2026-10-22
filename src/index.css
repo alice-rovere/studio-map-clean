@@ -2168,6 +2168,10 @@ body,
   animation: architecture-panel-enter 180ms ease-out;
 }
 
+.architecture-panel[hidden] {
+  display: none;
+}
+
 .architecture-panel--loading {
   display: grid;
   place-items: center;
@@ -2289,6 +2293,53 @@ body,
   text-transform: none;
 }
 
+.architecture-cage-label {
+  display: inline-flex;
+  max-width: 132px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, var(--label-accent, #ffbd70), transparent 58%);
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--label-accent, #ffbd70), #ffffff 24%);
+  background: rgba(11, 17, 32, 0.78);
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  pointer-events: auto;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.architecture-cage-label:hover,
+.architecture-cage-label:focus-visible,
+.architecture-cage-label[data-active="true"] {
+  border-color: color-mix(in srgb, var(--label-accent, #ffbd70), transparent 24%);
+  color: #fff7ea;
+  background: color-mix(in srgb, var(--label-accent, #ffbd70), #0b1120 78%);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--label-accent, #ffbd70), transparent 72%);
+}
+
+.architecture-cage-label:focus-visible {
+  outline: 2px solid #7ab8ff;
+  outline-offset: 2px;
+}
+
+.architecture-cage-label.is-dimmed {
+  opacity: 0.34;
+}
+
+.architecture-cage-label.is-dimmed:hover,
+.architecture-cage-label.is-dimmed:focus-visible {
+  opacity: 0.82;
+}
+
 .architecture-scene-fallback {
   display: grid;
   height: 100%;
@@ -2392,10 +2443,14 @@ body,
 }
 
 .architecture-panel__info p {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0;
   color: #a2afc1;
   font-size: 11px;
   line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .architecture-panel__footer {
@@ -2488,6 +2543,13 @@ body,
 
   .architecture-panel__scene {
     min-height: 220px;
+  }
+
+  .architecture-cage-label {
+    max-width: 104px;
+    padding: 2px 4px;
+    font-size: 7px;
+    letter-spacing: 0.04em;
   }
 }
 

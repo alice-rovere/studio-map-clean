@@ -5,10 +5,10 @@ import {
   ARCHITECTURE_CATEGORIES,
   ARCHITECTURE_FLOWS,
   ARCHITECTURE_LAYERS,
-  ARCHITECTURE_TOOLS,
 } from "../lib/architectureLayers.js";
 import {
   DevOpsCage,
+  DevOpsNodeLabel,
   FlowColumn,
   LevelPlatform,
   SceneLabel,
@@ -24,17 +24,6 @@ const LEVEL_Y = {
 const devopsCategory = ARCHITECTURE_CATEGORIES.find(
   (category) => category.id === "devops",
 );
-const toolsCategory = ARCHITECTURE_CATEGORIES.find(
-  (category) => category.id === "tools",
-);
-
-const toolItems = ARCHITECTURE_TOOLS.map((tool) => ({
-  ...tool,
-  category: toolsCategory.id,
-  tagline: toolsCategory.tagline,
-  accent: toolsCategory.accent,
-}));
-
 function ResponsiveCamera() {
   const { camera, size } = useThree();
 
@@ -53,11 +42,15 @@ function ResponsiveCamera() {
 
 export default function ArchitectureScene({
   activeCategory,
+  devopsItems = [],
   hoveredId,
+  isOpen,
   onHoverItem,
   onLeaveItem,
   onSelectCategory,
+  onSelectNode,
   reducedMotion,
+  toolItems = [],
 }) {
   function getHandlers(item, categoryId) {
     return {
@@ -76,6 +69,27 @@ export default function ArchitectureScene({
     };
   }
 
+  function getNodeHandlers(item) {
+    return {
+      onClick: (event) => {
+        event.stopPropagation();
+        onSelectNode(item.nodeId, item.category);
+      },
+      onPointerOut: (event) => {
+        event.stopPropagation();
+        onLeaveItem();
+      },
+      onPointerOver: (event) => {
+        event.stopPropagation();
+        onHoverItem(item);
+      },
+    };
+  }
+
+  function handleDevOpsNodeSelect(item) {
+    onSelectNode(item.nodeId, item.category);
+  }
+
   return (
     <Canvas
       camera={{ far: 60, fov: 38, near: 0.1, position: [7.6, 5, 9.8] }}
@@ -91,6 +105,7 @@ export default function ArchitectureScene({
         antialias: true,
         powerPreference: "high-performance",
       }}
+      frameloop={isOpen ? "always" : "never"}
       style={{ height: "100%", width: "100%" }}
     >
       <ambientLight intensity={0.75} />
@@ -155,7 +170,7 @@ export default function ArchitectureScene({
             key={tool.id}
             active={activeCategory === tool.category}
             dimmed={Boolean(activeCategory && activeCategory !== tool.category)}
-            handlers={getHandlers(tool, tool.category)}
+            handlers={getNodeHandlers(tool)}
             hovered={hoveredId === tool.id}
             paused={reducedMotion}
             tool={tool}
@@ -167,6 +182,18 @@ export default function ArchitectureScene({
           style={{ display: "none" }}
           zIndexRange={[0, 0]}
         />
+        {devopsItems.map((item) => (
+          <DevOpsNodeLabel
+            key={item.id}
+            active={activeCategory === item.category}
+            dimmed={Boolean(activeCategory && activeCategory !== item.category)}
+            hovered={hoveredId === item.id}
+            item={item}
+            onHover={onHoverItem}
+            onLeave={onLeaveItem}
+            onSelect={handleDevOpsNodeSelect}
+          />
+        ))}
         {ARCHITECTURE_LAYERS.map((layer) => (
           <SceneLabel
             color={layer.accent}

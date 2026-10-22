@@ -278,6 +278,57 @@ export function DevOpsCage({
   );
 }
 
+export function DevOpsNodeLabel({
+  item,
+  active,
+  dimmed,
+  hovered,
+  onHover,
+  onLeave,
+  onSelect,
+}) {
+  const highlighted = active || hovered;
+
+  return (
+    <group position={item.position}>
+      <mesh>
+        <sphereGeometry args={[0.045, 10, 10]} />
+        <meshBasicMaterial
+          color={item.accent}
+          opacity={dimmed ? 0.16 : highlighted ? 1 : 0.55}
+          transparent
+        />
+      </mesh>
+      <Html
+        center
+        distanceFactor={11}
+        style={{ pointerEvents: "auto" }}
+        zIndexRange={[5, 0]}
+      >
+        <button
+          aria-label={`Apri ${item.label}`}
+          className={`architecture-cage-label${
+            dimmed ? " is-dimmed" : ""
+          }`}
+          data-active={highlighted ? "true" : "false"}
+          onBlur={onLeave}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect(item);
+          }}
+          onFocus={() => onHover(item)}
+          onPointerEnter={() => onHover(item)}
+          onPointerLeave={onLeave}
+          style={{ "--label-accent": item.accent }}
+          type="button"
+        >
+          {item.label}
+        </button>
+      </Html>
+    </group>
+  );
+}
+
 function ToolGeometry({ shape }) {
   switch (shape) {
     case "box":
@@ -305,6 +356,7 @@ export function ToolSatellite({
 }) {
   const highlighted = active || hovered;
   const opacity = dimmed ? 0.2 : 1;
+  const accent = tool.accent ?? TOOL_ACCENT;
 
   return (
     <Float
@@ -320,8 +372,8 @@ export function ToolSatellite({
         <mesh>
           <ToolGeometry shape={tool.shape} />
           <meshStandardMaterial
-            color={TOOL_ACCENT}
-            emissive={TOOL_ACCENT}
+            color={accent}
+            emissive={accent}
             emissiveIntensity={highlighted ? 0.9 : 0.4}
             metalness={0.35}
             opacity={opacity}
@@ -332,14 +384,14 @@ export function ToolSatellite({
         <mesh scale={1.35}>
           <ToolGeometry shape={tool.shape} />
           <meshBasicMaterial
-            color={TOOL_ACCENT}
+            color={accent}
             opacity={dimmed ? 0.06 : highlighted ? 0.45 : 0.18}
             transparent
             wireframe
           />
         </mesh>
         {hovered && (
-          <SceneLabel color={TOOL_ACCENT} position={[0, 0.58, 0]} text={tool.label} />
+          <SceneLabel color={accent} position={[0, 0.58, 0]} text={tool.label} />
         )}
       </group>
     </Float>
