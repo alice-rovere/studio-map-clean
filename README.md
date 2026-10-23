@@ -39,27 +39,27 @@ e contenuti richiedono un account editor autenticato.
 
 ## Strumenti usati
 
-| Ambito | Strumento | Ruolo nel progetto |
-| --- | --- | --- |
-| UI | **React 19** | Componenti, stato e composizione dell'interfaccia |
-| Mappa | **React Flow** (`@xyflow/react`) | Canvas dei nodi, collegamenti, minimappa e controlli |
-| 3D | **Three.js**, **@react-three/fiber**, **@react-three/drei** | Vista tridimensionale dell'architettura |
-| Build | **Vite 8** | Server di sviluppo e build di produzione |
-| Stili | **Tailwind CSS v4** + CSS custom | Utility di base e sistema visivo dell'app |
-| Dati e auth | **Supabase** (PostgreSQL, Auth, RLS) | Persistenza, autenticazione e permessi |
-| Icone | **lucide-react** | Iconografia dell'interfaccia |
-| Package manager | **pnpm** | Installazione e gestione delle dipendenze |
-| Qualità | **ESLint** | Analisi statica del codice |
-| Deploy | **GitHub Actions** | Build e pubblicazione su GitHub Pages |
+| Ambito          | Strumento                                                   | Ruolo nel progetto                                   |
+| --------------- | ----------------------------------------------------------- | ---------------------------------------------------- |
+| UI              | **React 19**                                                | Componenti, stato e composizione dell'interfaccia    |
+| Mappa           | **React Flow** (`@xyflow/react`)                            | Canvas dei nodi, collegamenti, minimappa e controlli |
+| 3D              | **Three.js**, **@react-three/fiber**, **@react-three/drei** | Vista tridimensionale dell'architettura              |
+| Build           | **Vite 8**                                                  | Server di sviluppo e build di produzione             |
+| Stili           | **Tailwind CSS v4** + CSS custom                            | Utility di base e sistema visivo dell'app            |
+| Dati e auth     | **Supabase** (PostgreSQL, Auth, RLS)                        | Persistenza, autenticazione e permessi               |
+| Icone           | **lucide-react**                                            | Iconografia dell'interfaccia                         |
+| Package manager | **pnpm**                                                    | Installazione e gestione delle dipendenze            |
+| Qualità         | **ESLint**                                                  | Analisi statica del codice                           |
+| Deploy          | **GitHub Actions**                                          | Build e pubblicazione su GitHub Pages                |
 
 ## Dati e permessi
 
-| Tabella | Contenuto |
-| --- | --- |
-| `nodes` | Nodi della mappa: etichetta, categoria, sottocategoria e posizione |
-| `edges` | Collegamenti tra nodi e tipo di relazione |
+| Tabella        | Contenuto                                                                 |
+| -------------- | ------------------------------------------------------------------------- |
+| `nodes`        | Nodi della mappa: etichetta, categoria, sottocategoria e posizione        |
+| `edges`        | Collegamenti tra nodi e tipo di relazione                                 |
 | `node_details` | Descrizione, buone pratiche, naming, software, risorse e contenuti estesi |
-| `glossary` | Termini e definizioni |
+| `glossary`     | Termini e definizioni                                                     |
 
 Il progetto Supabase è già configurato. L'app richiede solo `VITE_SUPABASE_URL`
 e `VITE_SUPABASE_ANON_KEY`; le policy RLS consentono la lettura pubblica e
@@ -91,11 +91,11 @@ pnpm dev
 
 Altri comandi:
 
-| Comando | Effetto |
-| --- | --- |
-| `pnpm build` | Crea la build di produzione in `dist/` |
-| `pnpm preview` | Anteprima locale della build |
-| `pnpm lint` | Esegue ESLint |
+| Comando        | Effetto                                |
+| -------------- | -------------------------------------- |
+| `pnpm build`   | Crea la build di produzione in `dist/` |
+| `pnpm preview` | Anteprima locale della build           |
+| `pnpm lint`    | Esegue ESLint                          |
 
 Se le variabili Supabase mancano, l'app mostra un messaggio di configurazione
 invece della mappa.
@@ -124,14 +124,6 @@ La grammatica completa delle relazioni è descritta in
 Il workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
 compila e pubblica l'app quando arriva un push sul branch `main`; può essere
 avviato anche manualmente dalla scheda **Actions**.
-
-1. In **Settings → Pages** seleziona **GitHub Actions** come sorgente.
-2. In **Settings → Secrets and variables → Actions → Variables** crea
-   `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-3. In Supabase imposta l'URL del sito e aggiungi
-   `https://alice-rovere.github.io/studio-map-clean/` tra gli URL di
-   reindirizzamento consentiti.
-4. Esegui `git push origin main` e verifica l'esito del workflow.
 
 Per lavorare senza pubblicare subito, segui il
 [flusso di lavoro Git](./FLUSSO-LAVORO-GIT.md).
