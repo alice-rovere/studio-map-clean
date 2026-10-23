@@ -23,7 +23,7 @@ tratteggio, freccia) serve solo a rendere riconoscibile il tipo di relazione.
 ## Revisione degli archi esistenti
 
 Gli id storici non cambiano, anche quando la direzione viene corretta. In questo
-modo le migrazioni restano ripetibili e i riferimenti non si rompono.
+modo i riferimenti restano stabili e non si rompono.
 
 | id | Prima | Dopo | `kind` | Nota |
 | --- | --- | --- | --- | --- |

@@ -37,12 +37,12 @@ non compilate sono intenzionali e riconoscibili.
 - [ ] Aggiungere alle Linee guida una breve sezione sui tipi di file, vicino a
   **Naming convention** o **File e cartelle**.
 - [ ] Fare l'inventario delle estensioni effettivamente presenti nel progetto e
-  spiegare a cosa servono, con esempi: `.js` e `.jsx`, `.md`, `.yaml` e `.sql`.
-- [ ] Distinguere i formati di codice, documentazione, configurazione e database;
+  spiegare a cosa servono, con esempi: `.js` e `.jsx`, `.md` e `.yaml`.
+- [ ] Distinguere i formati di codice, documentazione e configurazione;
   includere altri formati solo se presenti e utili da conoscere.
 
 **Completato quando:** chi legge sa riconoscere i principali file del progetto
-e dove aspettarsi di trovare codice, documentazione, configurazione e migrazioni.
+e dove aspettarsi di trovare codice, documentazione e configurazione.
 
 ## 4. Completare la gestione dei dati
 
@@ -78,8 +78,8 @@ su viewport mobile, senza contenuti o azioni nascosti.
 - [ ] Scegliere l'ambiente di hosting e configurare le variabili Supabase senza
   includere segreti nel repository o nel bundle client.
 - [ ] Verificare URL di redirect, inviti e accesso in produzione.
-- [ ] Provare tutte le migrazioni su un progetto Supabase pulito e documentare
-  la sequenza di aggiornamento.
+- [ ] Documentare la configurazione del progetto Supabase: tabelle, policy RLS
+  e permessi necessari.
 - [ ] Configurare build e lint automatici prima della pubblicazione.
 - [ ] Definire una procedura per backup e ripristino dei dati.
 

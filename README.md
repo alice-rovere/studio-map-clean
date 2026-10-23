@@ -1,126 +1,158 @@
 # Studio Map
 
-Mappa React Flow con dati persistenti su Supabase: nodi, collegamenti, dettagli
-tecnici e glossario.
+**Studio Map è una mappa concettuale interattiva dell'ecosistema di sviluppo e,
+allo stesso tempo, un sito per raccogliere appunti.** Serve a orientarsi tra
+linguaggi, framework, database, strumenti e processi, e a trasformare ogni
+tecnologia in una scheda di studio consultabile.
 
-## Autenticazione
+## Il concetto
 
-L'accesso editor avviene con email e password per gli account autorizzati. La
-lettura dei dati resta pubblica; aggiunta, modifica ed eliminazione richiedono
-una sessione autenticata.
+- **Mappa**: un canvas a tutto schermo in cui ogni nodo rappresenta una
+  tecnologia o uno strumento e ogni collegamento esprime una relazione
+  (`richiede`, `usa`, `estende`, `alternativa`, `si_integra`, `strumento`,
+  `ospita`).
+- **Appunti**: selezionando un nodo si apre un pannello con descrizione, buone
+  pratiche, convenzioni di naming, software associato e risorse; da lì si può
+  entrare in una pagina di approfondimento con sezioni testuali, elenchi,
+  tabelle, timeline ed esempi di codice.
+- **Studio**: glossario, Linee guida, una sezione dedicata alla sicurezza
+  informatica e una vista 3D dell'architettura completano la consultazione.
 
-Le policy RLS e i privilegi SQL delle migrazioni limitano le scritture al ruolo
-`authenticated`; prima della pubblicazione, verifica che tutte le migrazioni
-siano state applicate al progetto Supabase e prova login, logout e modifiche con
-un account autorizzato che abbia una password configurata. In **Authentication
-→ Sign In / Providers → Email**, lascia **Confirm email** disattivato durante lo
-sviluppo e riattivalo in produzione. L'app non espone la registrazione. Non
-concedere scritture anonime al database per aggirare l'autenticazione.
+La lettura è pubblica. La creazione e la modifica di nodi, relazioni, glossario
+e contenuti richiedono un account editor autenticato.
 
-## Configurazione
+## Cosa puoi fare
 
-1. Crea un progetto Supabase.
-2. In **SQL Editor**, esegui il file
-   [`supabase/migrations/20261021000000_initial_schema.sql`](./supabase/migrations/20261021000000_initial_schema.sql).
-   Crea le tabelle e inserisce i dati iniziali attualmente presenti nella mappa.
-3. Esegui anche
-   [`supabase/migrations/20261021010000_allow_node_creation.sql`](./supabase/migrations/20261021010000_allow_node_creation.sql)
-   per consentire la creazione dei nodi dall'app.
-4. Esegui
-   [`supabase/migrations/20261021020000_node_extended_content.sql`](./supabase/migrations/20261021020000_node_extended_content.sql)
-   per aggiungere gli approfondimenti estesi di Git, HTML e CSS.
-5. Esegui
-   [`supabase/migrations/20261021030000_allow_node_extended_content_updates.sql`](./supabase/migrations/20261021030000_allow_node_extended_content_updates.sql)
-   per consentire il salvataggio dei contenuti estesi.
-6. Esegui
-   [`supabase/migrations/20261021040000_add_vite.sql`](./supabase/migrations/20261021040000_add_vite.sql)
-   per aggiungere Vite alla mappa e i relativi dettagli.
-7. Esegui
-   [`supabase/migrations/20261021050000_restrict_anonymous_writes.sql`](./supabase/migrations/20261021050000_restrict_anonymous_writes.sql)
-   per mantenere la lettura pubblica e richiedere un utente autenticato per ogni
-   modifica.
-8. Esegui
-   [`supabase/migrations/20261022000000_add_edge_kind.sql`](./supabase/migrations/20261022000000_add_edge_kind.sql)
-   per aggiungere il tipo di relazione ai collegamenti e riclassificare gli archi
-   esistenti secondo la grammatica descritta in
-   [`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md).
-9. In **Authentication → Sign In / Providers**, abilita Email e lascia
-   **Confirm email** disattivato durante lo sviluppo. In
-   **Authentication → Users**, crea gli account autorizzati e configura una
-   password per ciascuno.
-10. Prima della pubblicazione, riattiva **Confirm email**.
-11. Crea `.env.local` con l'URL del progetto (`VITE_SUPABASE_URL`) e la chiave
-    `anon`/publishable (`VITE_SUPABASE_ANON_KEY`) da **Project Settings → API**.
-12. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
+- Esplorare la mappa con zoom, trascinamento e minimappa.
+- Cercare un nodo e filtrare per categoria o sottocategoria.
+- Selezionare un nodo per attenuare il resto della mappa e vedere le relazioni
+  raggruppate in prerequisiti, abilitazioni, alternative e correlati.
+- Aprire la scheda di un nodo e la relativa pagina di approfondimento.
+- Consultare il glossario dei termini ricorrenti.
+- Leggere le Linee guida su naming, organizzazione dei file, qualità,
+  accessibilità e sicurezza.
+- Aprire la sezione su sicurezza informatica e hacking etico.
+- Passare alla vista **Architettura 3D** per una lettura per livelli
+  (frontend, backend, database, DevOps, tools).
+- Come editor: aggiungere nodi e termini, creare o correggere relazioni,
+  spostare i nodi e salvare i contenuti estesi.
 
-Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
-lettura pubblica; solo gli utenti autenticati possono creare, modificare o
-eliminare dati. L'accesso avviene con email e password per un account
-autorizzato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi,
-ma sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
+## Strumenti usati
+
+| Ambito | Strumento | Ruolo nel progetto |
+| --- | --- | --- |
+| UI | **React 19** | Componenti, stato e composizione dell'interfaccia |
+| Mappa | **React Flow** (`@xyflow/react`) | Canvas dei nodi, collegamenti, minimappa e controlli |
+| 3D | **Three.js**, **@react-three/fiber**, **@react-three/drei** | Vista tridimensionale dell'architettura |
+| Build | **Vite 8** | Server di sviluppo e build di produzione |
+| Stili | **Tailwind CSS v4** + CSS custom | Utility di base e sistema visivo dell'app |
+| Dati e auth | **Supabase** (PostgreSQL, Auth, RLS) | Persistenza, autenticazione e permessi |
+| Icone | **lucide-react** | Iconografia dell'interfaccia |
+| Package manager | **pnpm** | Installazione e gestione delle dipendenze |
+| Qualità | **ESLint** | Analisi statica del codice |
+| Deploy | **GitHub Actions** | Build e pubblicazione su GitHub Pages |
+
+## Dati e permessi
+
+| Tabella | Contenuto |
+| --- | --- |
+| `nodes` | Nodi della mappa: etichetta, categoria, sottocategoria e posizione |
+| `edges` | Collegamenti tra nodi e tipo di relazione |
+| `node_details` | Descrizione, buone pratiche, naming, software, risorse e contenuti estesi |
+| `glossary` | Termini e definizioni |
+
+Il progetto Supabase è già configurato. L'app richiede solo `VITE_SUPABASE_URL`
+e `VITE_SUPABASE_ANON_KEY`; le policy RLS consentono la lettura pubblica e
+limitano le scritture agli utenti autenticati.
+
+Non inserire mai una chiave `service_role` nel frontend o nel repository.
+
+## Avvio in locale
+
+Requisiti: Node.js 22 o superiore e pnpm.
+
+```powershell
+pnpm install
+```
+
+Crea `.env.local` nella radice del progetto con i valori presi da **Supabase →
+Project Settings → API**:
+
+```dotenv
+VITE_SUPABASE_URL=https://<progetto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<chiave-anon-o-publishable>
+```
+
+Avvia l'app:
+
+```powershell
+pnpm dev
+```
+
+Altri comandi:
+
+| Comando | Effetto |
+| --- | --- |
+| `pnpm build` | Crea la build di produzione in `dist/` |
+| `pnpm preview` | Anteprima locale della build |
+| `pnpm lint` | Esegue ESLint |
+
+Se le variabili Supabase mancano, l'app mostra un messaggio di configurazione
+invece della mappa.
+
+## Uso dell'app
+
+I visitatori non autenticati possono esplorare mappa, contenuti e glossario. Le
+azioni di modifica sono nascoste finché non si accede con un account editor.
+
+Con una sessione attiva è possibile:
+
+1. Aggiungere un nodo scegliendo etichetta, categoria e sottocategoria.
+2. Trascinare un nodo per riposizionarlo; la posizione viene salvata.
+3. Creare un collegamento trascinando da un nodo all'altro e scegliendo il tipo
+   di relazione nella modale.
+4. Cliccare su un collegamento per correggerne tipo e direzione.
+5. Aggiungere termini al glossario.
+6. Modificare i contenuti estesi di un nodo dalla relativa pagina di
+   approfondimento.
+
+La grammatica completa delle relazioni è descritta in
+[`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md).
 
 ## Pubblicazione su GitHub Pages
 
 Il workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
-compila e pubblica automaticamente l'app su GitHub Pages quando viene
-aggiornato il branch `main`; è possibile avviarlo anche manualmente dalla
-scheda **Actions**.
-Per lavorare su un branch senza pubblicare subito e integrare le modifiche
-quando sono pronte, segui il [flusso di lavoro Git](./FLUSSO-LAVORO-GIT.md).
+compila e pubblica l'app quando arriva un push sul branch `main`; può essere
+avviato anche manualmente dalla scheda **Actions**.
 
-Prima del primo deploy:
+1. In **Settings → Pages** seleziona **GitHub Actions** come sorgente.
+2. In **Settings → Secrets and variables → Actions → Variables** crea
+   `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+3. In Supabase imposta l'URL del sito e aggiungi
+   `https://alice-rovere.github.io/studio-map-clean/` tra gli URL di
+   reindirizzamento consentiti.
+4. Esegui `git push origin main` e verifica l'esito del workflow.
 
-1. Verifica che tutte le migrazioni necessarie siano già state applicate al
-   progetto Supabase e che le policy RLS consentano le letture previste, ma
-   vietino le scritture anonime. Non rieseguire migrazioni già applicate.
-2. Nel repository GitHub apri **Settings → Pages** e seleziona **GitHub
-   Actions** come sorgente di pubblicazione.
-3. Apri **Settings → Secrets and variables → Actions → Variables** e crea le
-   variabili di repository `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` con
-   i valori del progetto Supabase. Il workflow interrompe la build se mancano.
-   La chiave anon/publishable è pubblica e viene inclusa nel bundle del browser:
-   non usare mai una chiave `service_role`.
-4. In Supabase, imposta l'URL del sito e aggiungi agli URL di reindirizzamento
-   consentiti `https://alice-rovere.github.io/studio-map-clean/`.
-5. Controlla che gli account editor autorizzati siano configurati e che la
-   conferma email sia attiva in produzione.
-6. Esegui `git push origin main` e controlla che il workflow **Deploy to GitHub
-   Pages** termini correttamente nella scheda **Actions**.
-7. Apri `https://alice-rovere.github.io/studio-map-clean/` e verifica lettura
-   anonima, accesso/uscita, modifiche da account autenticato e ricaricamento
-   della pagina.
+Per lavorare senza pubblicare subito, segui il
+[flusso di lavoro Git](./FLUSSO-LAVORO-GIT.md).
 
-La build GitHub Pages usa il percorso `/studio-map-clean/`; in locale
-`pnpm dev` continua a usare `/`. Il sito è un frontend statico: i dati
-continuano a risiedere nel progetto Supabase attuale, quindi sviluppo e
-produzione condividono gli stessi dati. Effettua un backup prima del rilascio
-e verifica le modifiche direttamente sul sito pubblicato.
+## Struttura del progetto
 
-I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
-termini del glossario sono salvati immediatamente su Supabase. Ogni collegamento
-ha un tipo di relazione (`richiede`, `usa`, `estende`, `alternativa`,
-`si_integra`, `strumento`, `ospita`): la legenda in basso mostra la resa visiva
-e, passando il mouse su un arco, compare la frase che descrive la relazione.
-Selezionando un nodo, il resto della mappa si attenua e il pannello laterale
-raggruppa le relazioni in **Prerequisiti**, **Abilita**, **Alternative** e
-**Correlati**, con collegamenti rapidi agli altri nodi. Un clic sullo sfondo
-rimuove la selezione.
+```text
+src/
+  components/   Componenti della mappa, dei pannelli e delle pagine
+  lib/          Client Supabase, relazioni, sottocategorie e livelli 3D
+  App.jsx       Stato principale e orchestratore dell'interfaccia
+  index.css     Tema e stili dell'app
+public/         Asset statici
+.github/        Workflow di deploy
+```
 
-Il pannello **Filtri** in alto a destra consente di cercare un nodo e di
-mostrare o nascondere le categorie; i collegamenti seguono la visibilità dei
-nodi.
-I contenuti dei nodi e i relativi dettagli vengono letti dalle rispettive
-tabelle. Dalla modale
-di un nodo si può aprire una vista interna a schermo intero; i contenuti estesi
-sono sezioni strutturate archiviate in `node_details.extended_content`. Al
-momento sono inclusi approfondimenti per Git, HTML e CSS; gli altri nodi
-mostrano un avviso finché non vengono aggiunti contenuti. Dalla vista di
-approfondimento è possibile inserire o modificare le sezioni in formato JSON e
-salvarle su Supabase.
+## Documentazione
 
-La pagina **Linee guida**, accessibile dalla testata della mappa, raccoglie
-convenzioni generali su naming, organizzazione dei file, qualità del codice,
-accessibilità e sicurezza. Un pulsante separato nella testata apre la pagina
-introduttiva su sicurezza informatica e hacking etico, con risorse per
-esercitarsi in ambienti autorizzati. I contenuti sono statici nel progetto e
-non richiedono tabelle o migrazioni Supabase.
+- [`AGENTS.md`](./AGENTS.md) — specifica del progetto e integrazioni future.
+- [`PIANO-TUTOR-AI.md`](./PIANO-TUTOR-AI.md) — tutor AI ed esercizi di codice.
+- [`NEXT-STEPS.md`](./NEXT-STEPS.md) — attività di consolidamento.
+- [`SPUNTI-MAPPA.md`](./SPUNTI-MAPPA.md) — possibili nuovi nodi e percorsi.
+- [`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md) — grammatica delle relazioni.
+- [`FLUSSO-LAVORO-GIT.md`](./FLUSSO-LAVORO-GIT.md) — branch, commit e merge.
