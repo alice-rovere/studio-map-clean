@@ -153,6 +153,8 @@ public/         Asset statici
 ## Documentazione
 
 - [`AGENTS.md`](./AGENTS.md) — specifica del progetto e integrazioni future.
+- [`PROMPT-SQL-DETTAGLI-NODO.md`](./PROMPT-SQL-DETTAGLI-NODO.md) — prompt per
+  generare SQL dei dettagli di un nodo.
 - [`PIANO-TUTOR-AI.md`](./PIANO-TUTOR-AI.md) — tutor AI ed esercizi di codice.
 - [`NEXT-STEPS.md`](./NEXT-STEPS.md) — attività di consolidamento.
 - [`VERIFICA-RILASCIO.md`](./VERIFICA-RILASCIO.md) — controlli automatici e
