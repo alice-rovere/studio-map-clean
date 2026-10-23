@@ -59,6 +59,41 @@ eliminare dati. L'accesso avviene con email e password per un account
 autorizzato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi,
 ma sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
 
+## Pubblicazione su GitHub Pages
+
+Il workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
+compila e pubblica automaticamente l'app su GitHub Pages quando viene
+aggiornato il branch `main`; è possibile avviarlo anche manualmente dalla
+scheda **Actions**.
+
+Prima del primo deploy:
+
+1. Verifica che tutte le migrazioni necessarie siano già state applicate al
+   progetto Supabase e che le policy RLS consentano le letture previste, ma
+   vietino le scritture anonime. Non rieseguire migrazioni già applicate.
+2. Nel repository GitHub apri **Settings → Pages** e seleziona **GitHub
+   Actions** come sorgente di pubblicazione.
+3. Apri **Settings → Secrets and variables → Actions → Variables** e crea le
+   variabili di repository `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` con
+   i valori del progetto Supabase. Il workflow interrompe la build se mancano.
+   La chiave anon/publishable è pubblica e viene inclusa nel bundle del browser:
+   non usare mai una chiave `service_role`.
+4. In Supabase, imposta l'URL del sito e aggiungi agli URL di reindirizzamento
+   consentiti `https://alice-rovere.github.io/studio-map-clean/`.
+5. Controlla che gli account editor autorizzati siano configurati e che la
+   conferma email sia attiva in produzione.
+6. Esegui `git push origin main` e controlla che il workflow **Deploy to GitHub
+   Pages** termini correttamente nella scheda **Actions**.
+7. Apri `https://alice-rovere.github.io/studio-map-clean/` e verifica lettura
+   anonima, accesso/uscita, modifiche da account autenticato e ricaricamento
+   della pagina.
+
+La build GitHub Pages usa il percorso `/studio-map-clean/`; in locale
+`pnpm dev` continua a usare `/`. Il sito è un frontend statico: i dati
+continuano a risiedere nel progetto Supabase attuale, quindi sviluppo e
+produzione condividono gli stessi dati. Effettua un backup prima del rilascio
+e verifica le modifiche direttamente sul sito pubblicato.
+
 I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
 termini del glossario sono salvati immediatamente su Supabase. Ogni collegamento
 ha un tipo di relazione (`richiede`, `usa`, `estende`, `alternativa`,
