@@ -3,24 +3,17 @@
 Mappa React Flow con dati persistenti su Supabase: nodi, collegamenti, dettagli
 tecnici e glossario.
 
-## Modalità sviluppo (login disattivato)
+## Autenticazione
 
-> **TODO:** riattivare l'autenticazione prima della pubblicazione.
+L'accesso editor avviene tramite magic link inviato all'email di un account
+invitato. La lettura dei dati resta pubblica; aggiunta, modifica ed eliminazione
+richiedono una sessione autenticata.
 
-In `src/App.jsx` la costante `AUTH_DISABLED_FOR_DEV` è impostata a `true` per
-velocizzare lo sviluppo:
-
-- la UI di accesso (pulsante "Accedi", pannello magic link e pulsante "Esci") è
-  nascosta;
-- aggiunta di nodi, relazioni, termini del glossario, contenuti estesi e
-  spostamento dei nodi aggiornano solo lo stato React, **senza scrivere su
-  Supabase**;
-- il caricamento iniziale continua a leggere i dati pubblici da Supabase, quindi
-  un refresh ripristina lo stato salvato.
-
-Per riattivare il login: impostare `AUTH_DISABLED_FOR_DEV = false`, verificare
-che le policy RLS siano attive, testare il magic link e solo allora pubblicare.
-Non concedere scritture anonime al database per aggirare l'autenticazione.
+Le policy RLS e i privilegi SQL delle migrazioni limitano le scritture al ruolo
+`authenticated`; prima della pubblicazione, verifica che tutte le migrazioni
+siano state applicate al progetto Supabase e prova login, logout e modifiche con
+un account invitato. Non concedere scritture anonime al database per aggirare
+l'autenticazione.
 
 ## Configurazione
 

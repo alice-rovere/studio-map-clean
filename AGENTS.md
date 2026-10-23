@@ -1,15 +1,13 @@
 # Studio Map - Specifica Semplice
 
-## TODO: Autenticazione disattivata (sviluppo)
+## Autenticazione
 
-In `src/App.jsx` la costante `AUTH_DISABLED_FOR_DEV` è attualmente `true`:
-il login è disattivato, la UI di accesso è nascosta e le modifiche restano solo
-in memoria (nessuna scrittura su Supabase). Il caricamento dei dati resta
-pubblico.
+L'autenticazione tramite magic link è attiva in `src/App.jsx`. La lettura dei
+dati resta pubblica; le modifiche richiedono una sessione autenticata.
 
-**Da fare prima della pubblicazione:** impostare `AUTH_DISABLED_FOR_DEV = false`,
-verificare le policy RLS e testare il magic link. Non abilitare scritture anonime
-nel database.
+Prima della pubblicazione, verificare che le migrazioni RLS siano applicate al
+progetto Supabase e testare il magic link. Non abilitare scritture anonime nel
+database.
 
 ## Obiettivo
 

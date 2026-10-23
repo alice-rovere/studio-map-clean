@@ -48,10 +48,6 @@ import {
   getSubcategoryLabel,
 } from "./lib/nodeSubcategories.js";
 
-// TODO(auth): riattivare il login prima della pubblicazione.
-// In sviluppo: auth disattivata e modifiche mantenute solo in memoria.
-const AUTH_DISABLED_FOR_DEV = true;
-
 const ArchitecturePanel = lazy(
   () => import("./components/ArchitecturePanel.jsx"),
 );
@@ -302,18 +298,16 @@ function MapActions({
                 <Network aria-hidden="true" size={15} />
                 Aggiungi nodo
               </button>
-              {!AUTH_DISABLED_FOR_DEV && (
-                <button
-                  aria-label={`Esci${userEmail ? ` da ${userEmail}` : ""}`}
-                  className="studio-map__action-button studio-map__auth-button"
-                  onClick={onSignOut}
-                  title={userEmail || "Esci"}
-                  type="button"
-                >
-                  <LogOut aria-hidden="true" size={15} />
-                  Esci
-                </button>
-              )}
+              <button
+                aria-label={`Esci${userEmail ? ` da ${userEmail}` : ""}`}
+                className="studio-map__action-button studio-map__auth-button"
+                onClick={onSignOut}
+                title={userEmail || "Esci"}
+                type="button"
+              >
+                <LogOut aria-hidden="true" size={15} />
+                Esci
+              </button>
             </>
           ) : (
             <button
@@ -326,14 +320,12 @@ function MapActions({
               {isAuthLoading ? "Verifica accesso…" : "Accedi"}
             </button>
           )}
-          {!AUTH_DISABLED_FOR_DEV &&
-            isAuthPanelOpen &&
-            !isAuthenticated && (
-              <AuthPanel
-                onRequestMagicLink={onRequestMagicLink}
-                onClose={onCloseAuthPanel}
-              />
-            )}
+          {isAuthPanelOpen && !isAuthenticated && (
+            <AuthPanel
+              onRequestMagicLink={onRequestMagicLink}
+              onClose={onCloseAuthPanel}
+            />
+          )}
           {isNodeFormOpen && isAuthenticated && (
             <NodeForm
               categories={nodeCategories}
@@ -374,9 +366,7 @@ function App() {
   const [nodeDetails, setNodeDetails] = useState({});
   const [isLoading, setIsLoading] = useState(Boolean(supabase));
   const [session, setSession] = useState(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(
-    Boolean(supabase) && !AUTH_DISABLED_FOR_DEV,
-  );
+  const [isAuthLoading, setIsAuthLoading] = useState(Boolean(supabase));
   const [authError, setAuthError] = useState("");
   const [loadError, setLoadError] = useState(
     supabase
@@ -396,7 +386,7 @@ function App() {
     searchTerm,
     selectedSubcategory,
   );
-  const isAuthenticated = AUTH_DISABLED_FOR_DEV || Boolean(session?.user);
+  const isAuthenticated = Boolean(session?.user);
   const nodeLabels = useMemo(
     () => new Map(nodes.map((node) => [node.id, node.data.label])),
     [nodes],
@@ -594,7 +584,7 @@ function App() {
   }, [loadStudioMap]);
 
   useEffect(() => {
-    if (AUTH_DISABLED_FOR_DEV || !supabase) return undefined;
+    if (!supabase) return undefined;
 
     let isActive = true;
     const {
@@ -658,7 +648,6 @@ function App() {
           );
       setNodes((currentNodes) => applyNodeChanges(acceptedChanges, currentNodes));
       if (!isAuthenticated) return;
-      if (AUTH_DISABLED_FOR_DEV) return;
 
       const removedIds = changes
         .filter((change) => change.type === "remove")
@@ -686,7 +675,6 @@ function App() {
         : changes.filter((change) => change.type !== "remove");
       setEdges((currentEdges) => applyEdgeChanges(acceptedChanges, currentEdges));
       if (!isAuthenticated) return;
-      if (AUTH_DISABLED_FOR_DEV) return;
 
       const removedIds = changes
         .filter((change) => change.type === "remove")
@@ -740,7 +728,7 @@ function App() {
 
   async function handleConfirmRelation({ kind, isReversed }) {
     if (!relationFormData) return;
-    if (!AUTH_DISABLED_FOR_DEV && !supabase) {
+    if (!supabase) {
       setRelationFormError("Configurazione Supabase mancante.");
       return;
     }
@@ -753,37 +741,6 @@ function App() {
     const target = isReversed ? relationFormData.source : relationFormData.target;
     if (source === target) {
       setRelationFormError("Una relazione non può collegare un nodo a se stesso.");
-      return;
-    }
-
-    if (AUTH_DISABLED_FOR_DEV) {
-      if (relationFormData.mode === "edit") {
-        setEdges((currentEdges) =>
-          currentEdges.map((edge) =>
-            edge.id === relationFormData.id
-              ? createFlowEdge(
-                  { id: edge.id, source, target, kind },
-                  nodeLabels,
-                )
-              : edge,
-          ),
-        );
-        setEditingEdgeId(null);
-      } else {
-        const edge = {
-          id: crypto.randomUUID(),
-          source,
-          target,
-          type: "smoothstep",
-          kind,
-        };
-        setEdges((currentEdges) =>
-          addEdge(createFlowEdge(edge, nodeLabels), currentEdges),
-        );
-        setPendingConnection(null);
-      }
-      setRelationFormError("");
-      setMutationError("");
       return;
     }
 
@@ -846,19 +803,6 @@ function App() {
       return "Questo termine è già presente nel glossario.";
     }
 
-    if (AUTH_DISABLED_FOR_DEV) {
-      setGlossary((currentGlossary) => [
-        ...currentGlossary,
-        {
-          id: crypto.randomUUID(),
-          term: normalizedTerm,
-          definition: normalizedDefinition,
-        },
-      ]);
-      setMutationError("");
-      return null;
-    }
-
     if (!supabase) return "Configurazione Supabase mancante.";
     if (!isAuthenticated) return "Accedi per modificare il glossario.";
 
@@ -878,31 +822,6 @@ function App() {
   }
 
   async function handleAddNode({ label, category, subcategory, position }) {
-    if (AUTH_DISABLED_FOR_DEV) {
-      const node = {
-        id: crypto.randomUUID(),
-        label: label.trim(),
-        category,
-        subcategory,
-      };
-      setNodes((currentNodes) => [
-        ...currentNodes,
-        {
-          id: node.id,
-          type: "techNode",
-          position,
-          data: {
-            label: node.label,
-            category: node.category,
-            subcategory: node.subcategory,
-          },
-        },
-      ]);
-      setIsNodeFormOpen(false);
-      setMutationError("");
-      return null;
-    }
-
     if (!supabase) return "Configurazione Supabase mancante.";
     if (!isAuthenticated) return "Accedi per aggiungere nodi.";
 
@@ -940,18 +859,6 @@ function App() {
 
   async function handleSaveNodeContent(content) {
     if (!selectedNode) return "Configurazione Supabase mancante.";
-    if (AUTH_DISABLED_FOR_DEV) {
-      setNodeDetails((currentDetails) => ({
-        ...currentDetails,
-        [selectedNode.id]: {
-          ...currentDetails[selectedNode.id],
-          node_id: selectedNode.id,
-          extended_content: content,
-        },
-      }));
-      setMutationError("");
-      return null;
-    }
     if (!supabase) return "Configurazione Supabase mancante.";
     if (!isAuthenticated) return "Accedi per modificare i contenuti.";
 
@@ -985,7 +892,6 @@ function App() {
 
   async function handleNodeDragStop(_, node) {
     if (!supabase || !isAuthenticated) return;
-    if (AUTH_DISABLED_FOR_DEV) return;
 
     const { error } = await supabase
       .from("nodes")
