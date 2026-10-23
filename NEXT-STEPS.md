@@ -8,13 +8,16 @@ contenuti e post-it nel dettaglio nodo.
 
 ## 1. Rendere verificabili i flussi principali
 
-- [ ] Aggiungere test automatici per caricamento dei dati, accesso, creazione di
+Stato: test automatici e procedura di verifica pronti. Resta da eseguire la
+checklist manuale con il progetto Supabase reale e un account editor di prova.
+
+- [x] Aggiungere test automatici per caricamento dei dati, accesso, creazione di
       nodi e termini, salvataggio dei contenuti e gestione degli errori.
 - [ ] Verificare manualmente il comportamento con Supabase configurato e senza
       configurazione, sia come visitatore sia come utente autenticato.
-- [ ] Controllare che errori di rete o di autorizzazione siano visibili e che
+- [x] Controllare che errori di rete o di autorizzazione siano visibili e che
       l'interfaccia permetta di riprovare senza perdere il contesto.
-- [ ] Documentare una breve procedura di verifica prima di ogni rilascio.
+- [x] Documentare una breve procedura di verifica prima di ogni rilascio.
 
 **Completato quando:** i flussi essenziali sono coperti da test o da una
 procedura ripetibile e gli errori non lasciano l'interfaccia in uno stato

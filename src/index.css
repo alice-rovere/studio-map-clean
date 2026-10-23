@@ -56,6 +56,9 @@ body,
   z-index: 10;
   top: 88px;
   left: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   max-width: min(520px, calc(100% - 64px));
   padding: 10px 14px;
   border: 1px solid #8c4c55;
@@ -63,6 +66,17 @@ body,
   background: #321e28;
   color: #ffd6dc;
   font-size: 12px;
+}
+
+.studio-map__error-close {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid #8c4c55;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
 }
 
 .studio-map .react-flow {

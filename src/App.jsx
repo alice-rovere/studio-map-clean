@@ -47,6 +47,14 @@ import {
   NODE_SUBCATEGORY_OPTIONS,
   getSubcategoryLabel,
 } from "./lib/nodeSubcategories.js";
+import {
+  buildDisplayEdges,
+  buildDisplayNodes,
+  buildFocus,
+  filterVisibleEdges,
+  filterVisibleNodes,
+  getIsolatedCategory,
+} from "./lib/mapGraph.js";
 
 const ArchitecturePanel = lazy(
   () => import("./components/ArchitecturePanel.jsx"),
@@ -71,24 +79,6 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
-}
-
-const dependencyRelationKinds = new Set(["richiede", "usa", "estende"]);
-const relatedRelationKinds = new Set(["si_integra", "strumento", "ospita"]);
-
-function getRelationKind(edge) {
-  return edge.data?.kind ?? "usa";
-}
-
-function resolveHandleSides(sourcePosition, targetPosition) {
-  if (!sourcePosition || !targetPosition) return {};
-  if (sourcePosition.x < targetPosition.x) {
-    return { sourceHandle: "source-right", targetHandle: "target-left" };
-  }
-  if (sourcePosition.x > targetPosition.x) {
-    return { sourceHandle: "source-left", targetHandle: "target-right" };
-  }
-  return { sourceHandle: "source-right", targetHandle: "target-right" };
 }
 
 const studioCategories = [
@@ -125,17 +115,12 @@ const studioCategories = [
 ];
 
 function getErrorMessage(error) {
-  return error instanceof Error ? error.message : "Errore imprevisto.";
-}
-
-function getIsolatedCategory(hiddenCategories, searchTerm, selectedSubcategory) {
-  if (searchTerm.trim() || selectedSubcategory) return null;
-  if (hiddenCategories.size !== nodeCategories.length - 1) return null;
-
-  const visibleCategories = nodeCategories.filter(
-    (category) => !hiddenCategories.has(category),
-  );
-  return visibleCategories.length === 1 ? visibleCategories[0] : null;
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+  return "Errore imprevisto.";
 }
 
 function MapActions({
@@ -414,6 +399,7 @@ function App() {
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
   const activeArchitectureCategory = getIsolatedCategory(
+    nodeCategories,
     hiddenCategories,
     searchTerm,
     selectedSubcategory,
@@ -453,108 +439,36 @@ function App() {
     return null;
   }, [pendingConnection, editingEdge, nodeLabels]);
 
-  const visibleNodes = useMemo(() => {
-    if (isMobile) return nodes;
+  const visibleNodes = useMemo(
+    () =>
+      filterVisibleNodes(nodes, {
+        isMobile,
+        hiddenCategories,
+        selectedSubcategory,
+        searchTerm,
+      }),
+    [nodes, isMobile, hiddenCategories, selectedSubcategory, searchTerm],
+  );
 
-    const query = searchTerm.trim().toLocaleLowerCase();
-    return nodes.filter((node) => {
-      const category = node.data.category?.toLowerCase();
-      if (hiddenCategories.has(category)) return false;
-      if (
-        selectedSubcategory &&
-        node.data.subcategory !== selectedSubcategory
-      ) {
-        return false;
-      }
-      if (query) {
-        const searchable = `${node.data.label} ${getSubcategoryLabel(
-          node.data.subcategory,
-        )}`.toLocaleLowerCase();
-        if (!searchable.includes(query)) return false;
-      }
-      return true;
-    });
-  }, [nodes, isMobile, hiddenCategories, selectedSubcategory, searchTerm]);
+  const visibleEdges = useMemo(
+    () => filterVisibleEdges(edges, visibleNodes),
+    [edges, visibleNodes],
+  );
 
-  const visibleEdges = useMemo(() => {
-    const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
-    return edges.filter(
-      (edge) =>
-        visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
-    );
-  }, [edges, visibleNodes]);
+  const focus = useMemo(
+    () => buildFocus(selectedNodeId, visibleNodes, visibleEdges),
+    [selectedNodeId, visibleNodes, visibleEdges],
+  );
 
-  const focus = useMemo(() => {
-    if (!selectedNodeId) return null;
+  const displayNodes = useMemo(
+    () => buildDisplayNodes(visibleNodes, focus),
+    [visibleNodes, focus],
+  );
 
-    const nodesById = new Map(visibleNodes.map((node) => [node.id, node]));
-    const prerequisites = [];
-    const enables = [];
-    const alternatives = [];
-    const related = [];
-    const assigned = new Set([selectedNodeId]);
-    const edgeIds = new Set();
-
-    function collect(list, id) {
-      if (assigned.has(id)) return;
-      const node = nodesById.get(id);
-      if (!node) return;
-      assigned.add(id);
-      list.push(node);
-    }
-
-    visibleEdges.forEach((edge) => {
-      const isSource = edge.source === selectedNodeId;
-      const isTarget = edge.target === selectedNodeId;
-      if (!isSource && !isTarget) return;
-
-      const kind = getRelationKind(edge);
-      const neighborId = isSource ? edge.target : edge.source;
-
-      if (dependencyRelationKinds.has(kind)) {
-        collect(isSource ? prerequisites : enables, neighborId);
-      } else if (kind === "alternativa") {
-        collect(alternatives, neighborId);
-      } else if (relatedRelationKinds.has(kind)) {
-        collect(related, neighborId);
-      } else {
-        return;
-      }
-      edgeIds.add(edge.id);
-    });
-
-    return {
-      prerequisites,
-      enables,
-      alternatives,
-      related,
-      nodeIds: assigned,
-      edgeIds,
-    };
-  }, [selectedNodeId, visibleNodes, visibleEdges]);
-
-  const displayNodes = useMemo(() => {
-    if (!focus) return visibleNodes;
-    return visibleNodes.map((node) =>
-      focus.nodeIds.has(node.id)
-        ? node
-        : { ...node, className: "is-dimmed" },
-    );
-  }, [visibleNodes, focus]);
-
-  const displayEdges = useMemo(() => {
-    const positions = new Map(
-      visibleNodes.map((node) => [node.id, node.position]),
-    );
-    return visibleEdges.map((edge) => {
-      const handles = resolveHandleSides(
-        positions.get(edge.source),
-        positions.get(edge.target),
-      );
-      const isDimmed = focus && !focus.edgeIds.has(edge.id);
-      return { ...edge, ...handles, className: isDimmed ? "is-dimmed" : undefined };
-    });
-  }, [visibleNodes, visibleEdges, focus]);
+  const displayEdges = useMemo(
+    () => buildDisplayEdges(visibleNodes, visibleEdges, focus),
+    [visibleNodes, visibleEdges, focus],
+  );
 
   const loadStudioMap = useCallback(async () => {
     if (!supabase) return;
@@ -686,20 +600,45 @@ function App() {
       const removedIds = changes
         .filter((change) => change.type === "remove")
         .map((change) => change.id);
-      if (removedIds.length > 0 && supabase) {
-        supabase
-          .from("nodes")
-          .delete()
-          .in("id", removedIds)
-          .then(({ error }) => {
-            if (error) {
-              console.error("Impossibile eliminare i nodi da Supabase.", error);
-              setMutationError(`Impossibile eliminare i nodi: ${error.message}`);
-            }
-          });
-      }
+      if (removedIds.length === 0 || !supabase) return;
+
+      const removedNodes = nodes
+        .map((node, index) => ({ node, index }))
+        .filter(({ node }) => removedIds.includes(node.id));
+
+      supabase
+        .from("nodes")
+        .delete()
+        .in("id", removedIds)
+        .then(({ error }) => {
+          if (error) {
+            console.error("Impossibile eliminare i nodi da Supabase.", error);
+            setNodes((currentNodes) => {
+              const restored = [...currentNodes];
+              removedNodes.forEach(({ node, index }) => {
+                if (!restored.some((current) => current.id === node.id)) {
+                  restored.splice(Math.min(index, restored.length), 0, node);
+                }
+              });
+              return restored;
+            });
+            setMutationError(
+              `Impossibile eliminare i nodi: ${error.message}. I nodi sono stati ripristinati.`,
+            );
+            return;
+          }
+
+          setEdges((currentEdges) =>
+            currentEdges.filter(
+              (edge) =>
+                !removedIds.includes(edge.source) &&
+                !removedIds.includes(edge.target),
+            ),
+          );
+          setMutationError("");
+        });
     },
-    [isAuthenticated],
+    [isAuthenticated, nodes],
   );
 
   const onEdgesChange = useCallback(
@@ -713,20 +652,38 @@ function App() {
       const removedIds = changes
         .filter((change) => change.type === "remove")
         .map((change) => change.id);
-      if (removedIds.length > 0 && supabase) {
-        supabase
-          .from("edges")
-          .delete()
-          .in("id", removedIds)
-          .then(({ error }) => {
-            if (error) {
-              console.error("Impossibile eliminare i collegamenti da Supabase.", error);
-              setMutationError(`Impossibile eliminare i collegamenti: ${error.message}`);
-            }
-          });
-      }
+      if (removedIds.length === 0 || !supabase) return;
+
+      const removedEdges = edges
+        .map((edge, index) => ({ edge, index }))
+        .filter(({ edge }) => removedIds.includes(edge.id));
+
+      supabase
+        .from("edges")
+        .delete()
+        .in("id", removedIds)
+        .then(({ error }) => {
+          if (error) {
+            console.error("Impossibile eliminare i collegamenti da Supabase.", error);
+            setEdges((currentEdges) => {
+              const restored = [...currentEdges];
+              removedEdges.forEach(({ edge, index }) => {
+                if (!restored.some((current) => current.id === edge.id)) {
+                  restored.splice(Math.min(index, restored.length), 0, edge);
+                }
+              });
+              return restored;
+            });
+            setMutationError(
+              `Impossibile eliminare i collegamenti: ${error.message}. I collegamenti sono stati ripristinati.`,
+            );
+            return;
+          }
+
+          setMutationError("");
+        });
     },
-    [isAuthenticated],
+    [isAuthenticated, edges],
   );
 
   const onConnect = useCallback(
@@ -1109,7 +1066,7 @@ function App() {
     return (
       <main className="studio-map studio-map__message">
         {isLoading ? (
-          <p>Caricamento mappa da Supabase…</p>
+          <p role="status">Caricamento mappa da Supabase…</p>
         ) : (
           <div role="alert">
             <p>{loadError}</p>
@@ -1127,9 +1084,20 @@ function App() {
   return (
     <main className="studio-map h-screen w-screen">
       {(mutationError || authError) && (
-        <p className="studio-map__error" role="alert">
-          {mutationError || authError}
-        </p>
+        <div className="studio-map__error" role="alert">
+          <span>{mutationError || authError}</span>
+          <button
+            aria-label="Chiudi messaggio di errore"
+            className="studio-map__error-close"
+            onClick={() => {
+              setMutationError("");
+              setAuthError("");
+            }}
+            type="button"
+          >
+            Chiudi
+          </button>
+        </div>
       )}
       <ReactFlow
         nodes={displayNodes}

@@ -50,6 +50,7 @@ e contenuti richiedono un account editor autenticato.
 | Icone           | **lucide-react**                                            | Iconografia dell'interfaccia                         |
 | Package manager | **pnpm**                                                    | Installazione e gestione delle dipendenze            |
 | Qualità         | **ESLint**                                                  | Analisi statica del codice                           |
+| Test            | **Vitest**, **Testing Library**                             | Test unitari, di componente e di integrazione        |
 | Deploy          | **GitHub Actions**                                          | Build e pubblicazione su GitHub Pages                |
 
 ## Dati e permessi
@@ -91,14 +92,23 @@ pnpm dev
 
 Altri comandi:
 
-| Comando        | Effetto                                |
-| -------------- | -------------------------------------- |
-| `pnpm build`   | Crea la build di produzione in `dist/` |
-| `pnpm preview` | Anteprima locale della build           |
-| `pnpm lint`    | Esegue ESLint                          |
+| Comando             | Effetto                                      |
+| ------------------- | -------------------------------------------- |
+| `pnpm build`        | Crea la build di produzione in `dist/`       |
+| `pnpm preview`      | Anteprima locale della build                 |
+| `pnpm lint`         | Esegue ESLint                                |
+| `pnpm test`         | Esegue i test automatici                     |
+| `pnpm test:watch`   | Riesegue i test al salvataggio               |
+| `pnpm test:coverage`| Esegue i test e genera il report di copertura |
 
 Se le variabili Supabase mancano, l'app mostra un messaggio di configurazione
 invece della mappa.
+
+I test usano **Vitest** e **Testing Library** con Supabase e React Flow
+simulati. Coprono caricamento ed errori, accesso, creazione di nodi e termini,
+salvataggio dei contenuti e gestione delle relazioni. La procedura manuale per
+verificare i flussi reali è descritta in
+[`VERIFICA-RILASCIO.md`](./VERIFICA-RILASCIO.md).
 
 ## Uso dell'app
 
@@ -145,6 +155,8 @@ public/         Asset statici
 - [`AGENTS.md`](./AGENTS.md) — specifica del progetto e integrazioni future.
 - [`PIANO-TUTOR-AI.md`](./PIANO-TUTOR-AI.md) — tutor AI ed esercizi di codice.
 - [`NEXT-STEPS.md`](./NEXT-STEPS.md) — attività di consolidamento.
+- [`VERIFICA-RILASCIO.md`](./VERIFICA-RILASCIO.md) — controlli automatici e
+  manuali prima della pubblicazione.
 - [`SPUNTI-MAPPA.md`](./SPUNTI-MAPPA.md) — possibili nuovi nodi e percorsi.
 - [`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md) — grammatica delle relazioni.
 - [`FLUSSO-LAVORO-GIT.md`](./FLUSSO-LAVORO-GIT.md) — branch, commit e merge.
