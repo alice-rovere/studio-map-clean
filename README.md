@@ -5,15 +5,17 @@ tecnici e glossario.
 
 ## Autenticazione
 
-L'accesso editor avviene tramite magic link inviato all'email di un account
-invitato. La lettura dei dati resta pubblica; aggiunta, modifica ed eliminazione
-richiedono una sessione autenticata.
+L'accesso editor avviene con email e password per gli account autorizzati. La
+lettura dei dati resta pubblica; aggiunta, modifica ed eliminazione richiedono
+una sessione autenticata.
 
 Le policy RLS e i privilegi SQL delle migrazioni limitano le scritture al ruolo
 `authenticated`; prima della pubblicazione, verifica che tutte le migrazioni
 siano state applicate al progetto Supabase e prova login, logout e modifiche con
-un account invitato. Non concedere scritture anonime al database per aggirare
-l'autenticazione.
+un account autorizzato che abbia una password configurata. In **Authentication
+→ Sign In / Providers → Email**, lascia **Confirm email** disattivato durante lo
+sviluppo e riattivalo in produzione. L'app non espone la registrazione. Non
+concedere scritture anonime al database per aggirare l'autenticazione.
 
 ## Configurazione
 
@@ -42,20 +44,20 @@ l'autenticazione.
    per aggiungere il tipo di relazione ai collegamenti e riclassificare gli archi
    esistenti secondo la grammatica descritta in
    [`RELAZIONI-MAPPA.md`](./RELAZIONI-MAPPA.md).
-9. In **Authentication → Sign In / Providers**, abilita Email; nelle
-   impostazioni Auth disattiva le registrazioni pubbliche. In
-   **Authentication → Users**, invita o crea gli account autorizzati.
-10. In **Authentication → URL Configuration**, aggiungi l'URL dell'app locale e
-    quello di produzione tra i redirect consentiti per i magic link.
+9. In **Authentication → Sign In / Providers**, abilita Email e lascia
+   **Confirm email** disattivato durante lo sviluppo. In
+   **Authentication → Users**, crea gli account autorizzati e configura una
+   password per ciascuno.
+10. Prima della pubblicazione, riattiva **Confirm email**.
 11. Crea `.env.local` con l'URL del progetto (`VITE_SUPABASE_URL`) e la chiave
     `anon`/publishable (`VITE_SUPABASE_ANON_KEY`) da **Project Settings → API**.
 12. Installa le dipendenze con `pnpm install` e avvia con `pnpm dev`.
 
 Non inserire mai una `service_role` key nel frontend. Gli script abilitano la
 lettura pubblica; solo gli utenti autenticati possono creare, modificare o
-eliminare dati. L'accesso avviene tramite link inviato all'email di un account
-invitato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi, ma
-sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
+eliminare dati. L'accesso avviene con email e password per un account
+autorizzato. L'interfaccia nasconde le azioni di modifica agli utenti anonimi,
+ma sono le policy RLS e i privilegi SQL a proteggere effettivamente i dati.
 
 I nuovi nodi, le posizioni spostate, i collegamenti creati/eliminati e i nuovi
 termini del glossario sono salvati immediatamente su Supabase. Ogni collegamento

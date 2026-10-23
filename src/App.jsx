@@ -127,7 +127,7 @@ function MapActions({
   isAuthPanelOpen,
   userEmail,
   onToggleAuthPanel,
-  onRequestMagicLink,
+  onSignIn,
   onCloseAuthPanel,
   onSignOut,
   onToggleGlossary,
@@ -322,7 +322,7 @@ function MapActions({
           )}
           {isAuthPanelOpen && !isAuthenticated && (
             <AuthPanel
-              onRequestMagicLink={onRequestMagicLink}
+              onSignIn={onSignIn}
               onClose={onCloseAuthPanel}
             />
           )}
@@ -994,19 +994,13 @@ function App() {
     fitVisibleFlow();
   }
 
-  async function handleRequestMagicLink(email) {
+  async function handleSignIn({ email, password }) {
     if (!supabase) return "Configurazione Supabase mancante.";
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: window.location.origin,
-      },
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.error("Impossibile inviare il link di accesso.", error);
-      return `Impossibile inviare il link di accesso: ${error.message}`;
+      console.error("Impossibile accedere.", error);
+      return `Impossibile accedere: ${error.message}`;
     }
     return null;
   }
@@ -1154,7 +1148,7 @@ function App() {
           isAuthPanelOpen={isAuthPanelOpen}
           userEmail={session?.user?.email}
           onToggleAuthPanel={() => setIsAuthPanelOpen((isOpen) => !isOpen)}
-          onRequestMagicLink={handleRequestMagicLink}
+          onSignIn={handleSignIn}
           onCloseAuthPanel={() => setIsAuthPanelOpen(false)}
           onSignOut={handleSignOut}
           onToggleGlossary={() => {

@@ -2,11 +2,12 @@
 
 ## Autenticazione
 
-L'autenticazione tramite magic link è attiva in `src/App.jsx`. La lettura dei
-dati resta pubblica; le modifiche richiedono una sessione autenticata.
+L'autenticazione email + password è attiva in `src/App.jsx`. La lettura dei dati
+resta pubblica; le modifiche richiedono una sessione autenticata.
 
-Prima della pubblicazione, verificare che le migrazioni RLS siano applicate al
-progetto Supabase e testare il magic link. Non abilitare scritture anonime nel
+In sviluppo, **Confirm email** del provider Email in Supabase può restare
+disattivato; riattivarlo in produzione. Verificare che le migrazioni RLS siano
+applicate e testare login e modifiche. Non abilitare scritture anonime nel
 database.
 
 ## Obiettivo

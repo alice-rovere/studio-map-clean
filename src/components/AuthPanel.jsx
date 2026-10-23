@@ -1,38 +1,33 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-export default function AuthPanel({ onRequestMagicLink, onClose }) {
+export default function AuthPanel({ onSignIn, onClose }) {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     const normalizedEmail = email.trim();
-    if (!normalizedEmail) {
-      setError("Inserisci l'indirizzo email.");
-      return;
-    }
 
-    setIsSending(true);
+    setIsSigningIn(true);
     setError("");
     try {
-      const requestError = await onRequestMagicLink(normalizedEmail);
-      if (requestError) {
-        setError(requestError);
-        return;
-      }
-      setLinkSent(true);
-    } catch (requestError) {
-      console.error("Impossibile richiedere il link di accesso.", requestError);
+      const signInError = await onSignIn({
+        email: normalizedEmail,
+        password,
+      });
+      if (signInError) setError(signInError);
+    } catch (signInError) {
+      console.error("Impossibile accedere.", signInError);
       setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Errore imprevisto durante la richiesta del link.",
+        signInError instanceof Error
+          ? signInError.message
+          : "Errore imprevisto durante l'accesso.",
       );
     } finally {
-      setIsSending(false);
+      setIsSigningIn(false);
     }
   }
 
@@ -62,32 +57,34 @@ export default function AuthPanel({ onRequestMagicLink, onClose }) {
         <input
           autoComplete="email"
           autoFocus
-          disabled={isSending}
+          disabled={isSigningIn}
           id="auth-email"
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setLinkSent(false);
-          }}
+          onChange={(event) => setEmail(event.target.value)}
           required
           type="email"
           value={email}
+        />
+        <label htmlFor="auth-password">Password</label>
+        <input
+          autoComplete="current-password"
+          disabled={isSigningIn}
+          id="auth-password"
+          onChange={(event) => setPassword(event.target.value)}
+          required
+          type="password"
+          value={password}
         />
         {error && (
           <p aria-live="polite" className="glossary-form__error" role="alert">
             {error}
           </p>
         )}
-        {linkSent && (
-          <p aria-live="polite" className="auth-panel__success" role="status">
-            Link inviato. Controlla la posta e aprilo per accedere alla mappa.
-          </p>
-        )}
         <button
           className="auth-panel__submit"
-          disabled={isSending}
+          disabled={isSigningIn}
           type="submit"
         >
-          {isSending ? "Invio…" : linkSent ? "Invia di nuovo il link" : "Invia link di accesso"}
+          {isSigningIn ? "Accesso…" : "Accedi"}
         </button>
       </form>
     </section>
