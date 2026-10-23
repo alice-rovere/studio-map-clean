@@ -54,6 +54,25 @@ const ArchitecturePanel = lazy(
 
 const nodeCategories = ["frontend", "backend", "database", "devops", "tools"];
 
+const MOBILE_QUERY = "(max-width: 760px)";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia(MOBILE_QUERY).matches,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_QUERY);
+    const handleChange = () => setIsMobile(query.matches);
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
+  }, []);
+
+  return isMobile;
+}
+
 const dependencyRelationKinds = new Set(["richiede", "usa", "estende"]);
 const relatedRelationKinds = new Set(["si_integra", "strumento", "ospita"]);
 
@@ -176,28 +195,40 @@ function MapActions({
           </div>
           <nav aria-label="Risorse" className="studio-map__header-links">
             <button
+              aria-label="Linee guida"
               className="studio-map__header-link"
               onClick={onOpenGuidelines}
+              title="Linee guida"
               type="button"
             >
               <BookOpen aria-hidden="true" size={15} />
-              Linee guida
+              <span className="studio-map__header-link-label">
+                Linee guida
+              </span>
             </button>
             <button
+              aria-label="Sicurezza informatica"
               className="studio-map__header-link"
               onClick={onOpenSecurity}
+              title="Sicurezza informatica"
               type="button"
             >
               <ShieldCheck aria-hidden="true" size={15} />
-              Sicurezza informatica
+              <span className="studio-map__header-link-label">
+                Sicurezza informatica
+              </span>
             </button>
             <button
+              aria-label="Architettura 3D"
               className="studio-map__header-link"
               onClick={onOpenArchitecture}
+              title="Architettura 3D"
               type="button"
             >
               <Boxes aria-hidden="true" size={15} />
-              Architettura 3D
+              <span className="studio-map__header-link-label">
+                Architettura 3D
+              </span>
             </button>
           </nav>
         </div>
@@ -377,6 +408,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
+  const isMobile = useIsMobile();
   const flowInstanceRef = useRef(null);
   const nodeTypes = useMemo(() => ({ techNode: TechNode }), []);
   const edgeTypes = useMemo(() => ({ relation: RelationEdge }), []);
@@ -422,6 +454,8 @@ function App() {
   }, [pendingConnection, editingEdge, nodeLabels]);
 
   const visibleNodes = useMemo(() => {
+    if (isMobile) return nodes;
+
     const query = searchTerm.trim().toLocaleLowerCase();
     return nodes.filter((node) => {
       const category = node.data.category?.toLowerCase();
@@ -440,7 +474,7 @@ function App() {
       }
       return true;
     });
-  }, [nodes, hiddenCategories, selectedSubcategory, searchTerm]);
+  }, [nodes, isMobile, hiddenCategories, selectedSubcategory, searchTerm]);
 
   const visibleEdges = useMemo(() => {
     const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
@@ -1258,6 +1292,7 @@ function App() {
         >
           <ArchitecturePanel
             activeCategory={activeArchitectureCategory}
+            filtersMap={!isMobile}
             nodeDetails={nodeDetails}
             nodes={nodes}
             isOpen={isArchitectureOpen}

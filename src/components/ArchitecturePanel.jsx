@@ -27,6 +27,7 @@ function useReducedMotion() {
 
 export default function ArchitecturePanel({
   activeCategory,
+  filtersMap = true,
   nodeDetails = {},
   nodes = [],
   isOpen = true,
@@ -128,7 +129,9 @@ export default function ArchitecturePanel({
       )}
 
       <div
-        aria-label="Filtra la mappa per livello"
+        aria-label={
+          filtersMap ? "Filtra la mappa per livello" : "Evidenzia un livello"
+        }
         className="architecture-panel__legend"
         role="group"
       >
@@ -169,9 +172,9 @@ export default function ArchitecturePanel({
             </span>
             <h3>Esplora la struttura</h3>
             <p>
-              Seleziona un livello per filtrare la mappa, oppure un tool o un
-              nodo DevOps per aprire direttamente la sua scheda. Clicca di
-              nuovo sul livello per rimuovere il filtro.
+              {filtersMap
+                ? "Seleziona un livello per filtrare la mappa, oppure un tool o un nodo DevOps per aprire direttamente la sua scheda. Clicca di nuovo sul livello per rimuovere il filtro."
+                : "Seleziona un livello per evidenziarlo, oppure un tool o un nodo DevOps per aprire direttamente la sua scheda. Clicca di nuovo sul livello per rimuovere l'evidenza."}
             </p>
           </>
         )}
@@ -179,7 +182,13 @@ export default function ArchitecturePanel({
 
       <footer className="architecture-panel__footer">
         <span className="architecture-panel__status">
-          {activeItem ? `Mappa filtrata: ${activeItem.label}` : "Nessun filtro attivo"}
+          {activeItem
+            ? filtersMap
+              ? `Mappa filtrata: ${activeItem.label}`
+              : `Livello attivo: ${activeItem.label}`
+            : filtersMap
+              ? "Nessun filtro attivo"
+              : "Nessun livello attivo"}
         </span>
         <button
           className="architecture-panel__reset"

@@ -65,6 +65,8 @@ Il workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
 compila e pubblica automaticamente l'app su GitHub Pages quando viene
 aggiornato il branch `main`; è possibile avviarlo anche manualmente dalla
 scheda **Actions**.
+Per lavorare su un branch senza pubblicare subito e integrare le modifiche
+quando sono pronte, segui il [flusso di lavoro Git](./FLUSSO-LAVORO-GIT.md).
 
 Prima del primo deploy:
 
